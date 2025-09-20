@@ -1,10 +1,9 @@
 import React from "react";
 import type { Metadata } from "next";
-
-import Header from "./components/Header";
-import Contacts from "./components/Contacts";
-import PriceList from "./components/PriceList";
-import AboutUs from "./components/AboutUs";
+import Header from "../src/components/Header";
+import Contacts from "../src/components/Contacts";
+import PriceList from "../src/components/PriceList";
+import AboutUs from "../src/components/AboutUs";
 
 // ✅ SEO для главной страницы
 export const metadata: Metadata = {
@@ -52,7 +51,7 @@ export default function HomePage() {
     <div>
       <Header />
 
-      <section id="home" className="pt-[64px]">
+      <section id="home" className="pt-[24px]">
         <h1 className="text-2xl pl-[24px] font-bold ">
           Быстро. Надёжно. Междугороднее такси.
         </h1>

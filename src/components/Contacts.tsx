@@ -112,7 +112,7 @@ export default function ContactsPage() {
             className="appearance-none border-none bg-white rounded-2xl p-4 outline-none"
             required
           >
-            <option value="">Выберите пункт отправления</option>
+            <option value={Options[0]}>Выберите пункт отправления</option>
             {Options.map((city, i) => (
               <option key={i} value={city}>
                 {city}
@@ -125,8 +125,9 @@ export default function ContactsPage() {
             name="to"
             className="appearance-none border-none bg-white rounded-2xl p-4 outline-none"
             required
+            value={Options[1]}
           >
-            <option value="">Выберите пункт назначения</option>
+            <option value={Options[1]}>Выберите пункт назначения</option>
             {Options.map((city, i) => (
               <option key={i} value={city}>
                 {city}
