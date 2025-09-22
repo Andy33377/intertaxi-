@@ -5,18 +5,22 @@ import { useSearchParams, useRouter } from "next/navigation";
 
 export default function OrderForm() {
   const router = useRouter();
-  const params = useSearchParams();
+  // const params = useSearchParams();
 
-  // 🔹 Данные маршрута, которые пришли из ContactsPage
-  const from = params.get("from") || "";
-  const to = params.get("to") || "";
-  const date = params.get("date") || "";
-  const time = params.get("time") || "";
-  const roundTrip = params.get("roundTrip") === "true";
-  const returnDate = params.get("returnDate") || "";
-  const returnTime = params.get("returnTime") || "";
+  // // 🔹 Данные маршрута из query
+  // const trip = {
+  //   from: params.get("from") || "",
+  //   to: params.get("to") || "",
+  //   date: params.get("date") || "",
+  //   time: params.get("time") || "",
+  //   roundTrip: params.get("roundTrip") === "true",
+  //   returnDate: params.get("returnDate") || "",
+  //   returnTime: params.get("returnTime") || "",
+  // };
 
-  // 🔹 Локальный state для ввода контактов
+  const trip = JSON.parse(localStorage.getItem("tripData") ?? "");
+
+  // 🔹 Локальный state для контактов
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [passengers, setPassengers] = useState(1);
@@ -28,24 +32,18 @@ export default function OrderForm() {
     e.preventDefault();
 
     const payload = {
+      ...trip, // ➕ маршрут
       name: name.trim(),
       phone: phone.trim(),
       passengers,
       childSeat,
       comment: comment.trim(),
-      from,
-      to,
-      date,
-      time,
-      roundTrip,
-      returnDate,
-      returnTime,
     };
 
     console.log("📤 Отправляем заказ:", payload);
 
     try {
-      const res = await fetch("/api/orders", {
+      const res = await fetch("http://localhost:3000/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -77,24 +75,24 @@ export default function OrderForm() {
       {/* Подтверждение маршрута */}
       <div className="bg-gray-100 p-3 rounded-lg text-sm space-y-1">
         <p>
-          <strong>Откуда:</strong> {from}
+          <strong>Откуда:</strong> {trip.from}
         </p>
         <p>
-          <strong>Куда:</strong> {to}
+          <strong>Куда:</strong> {trip.to}
         </p>
         <p>
-          <strong>Дата:</strong> {date}
+          <strong>Дата:</strong> {trip.date}
         </p>
         <p>
-          <strong>Время:</strong> {time}
+          <strong>Время:</strong> {trip.time}
         </p>
-        {roundTrip && (
+        {trip.roundTrip && (
           <>
             <p>
-              <strong>Обратная дата:</strong> {returnDate}
+              <strong>Обратная дата:</strong> {trip.returnDate}
             </p>
             <p>
-              <strong>Обратное время:</strong> {returnTime}
+              <strong>Обратное время:</strong> {trip.returnTime}
             </p>
           </>
         )}

@@ -24,7 +24,6 @@ export default function ContactsPage() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     const data = new FormData(e.currentTarget);
 
     const payload = {
@@ -37,8 +36,7 @@ export default function ContactsPage() {
       returnTime: data.get("returnTime") || null,
     };
 
-    console.log("FORM:", payload);
-
+    localStorage.setItem("tripData", JSON.stringify(payload)); // 💾 сохранить
     router.push("/order");
   };
 
