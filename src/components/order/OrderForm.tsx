@@ -1,24 +1,35 @@
 "use client";
 
-import React, { useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function OrderForm() {
+  type Trip = {
+    from?: string;
+    to?: string;
+    date?: string;
+    time?: string;
+    roundTrip?: boolean;
+    returnDate?: string | null;
+    returnTime?: string | null;
+  };
+
   const router = useRouter();
-  // const params = useSearchParams();
 
-  // // 🔹 Данные маршрута из query
-  // const trip = {
-  //   from: params.get("from") || "",
-  //   to: params.get("to") || "",
-  //   date: params.get("date") || "",
-  //   time: params.get("time") || "",
-  //   roundTrip: params.get("roundTrip") === "true",
-  //   returnDate: params.get("returnDate") || "",
-  //   returnTime: params.get("returnTime") || "",
-  // };
+  // 🔹 Состояние маршрута
+  const [trip, setTrip] = useState<Trip>({});
+  const [tripLoaded, setTripLoaded] = useState(false);
 
-  const trip = JSON.parse(localStorage.getItem("tripData") ?? "");
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("tripData");
+      setTrip(raw ? JSON.parse(raw) : {});
+    } catch {
+      setTrip({});
+    } finally {
+      setTripLoaded(true);
+    }
+  }, []);
 
   // 🔹 Локальный state для контактов
   const [name, setName] = useState("");
@@ -32,7 +43,7 @@ export default function OrderForm() {
     e.preventDefault();
 
     const payload = {
-      ...trip, // ➕ маршрут
+      ...trip,
       name: name.trim(),
       phone: phone.trim(),
       passengers,
@@ -43,7 +54,7 @@ export default function OrderForm() {
     console.log("📤 Отправляем заказ:", payload);
 
     try {
-      const res = await fetch("http://localhost:3000/api/orders", {
+      const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -66,6 +77,26 @@ export default function OrderForm() {
     }
   };
 
+  // 🔹 Пока грузим localStorage
+  if (!tripLoaded) {
+    return <p className="text-center p-4">Загрузка...</p>;
+  }
+
+  // 🔹 Если маршрута нет — вернуть на форму выбора
+  if (!trip.from || !trip.to || !trip.date || !trip.time) {
+    return (
+      <div className="max-w-md mx-auto p-4 text-center">
+        <p>Маршрут не заполнен. Пожалуйста, выберите его заново.</p>
+        <button
+          onClick={() => router.push("/#contacts")}
+          className="mt-3 rounded-2xl bg-black text-white px-4 py-2"
+        >
+          К выбору маршрута
+        </button>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-md mx-auto p-4">
       <h2 className="text-xl font-bold text-center mb-4">
@@ -75,24 +106,24 @@ export default function OrderForm() {
       {/* Подтверждение маршрута */}
       <div className="bg-gray-100 p-3 rounded-lg text-sm space-y-1">
         <p>
-          <strong>Откуда:</strong> {trip.from}
+          <strong>Откуда:</strong> {trip.from || "—"}
         </p>
         <p>
-          <strong>Куда:</strong> {trip.to}
+          <strong>Куда:</strong> {trip.to || "—"}
         </p>
         <p>
-          <strong>Дата:</strong> {trip.date}
+          <strong>Дата:</strong> {trip.date || "—"}
         </p>
         <p>
-          <strong>Время:</strong> {trip.time}
+          <strong>Время:</strong> {trip.time || "—"}
         </p>
         {trip.roundTrip && (
           <>
             <p>
-              <strong>Обратная дата:</strong> {trip.returnDate}
+              <strong>Обратная дата:</strong> {trip.returnDate || "—"}
             </p>
             <p>
-              <strong>Обратное время:</strong> {trip.returnTime}
+              <strong>Обратное время:</strong> {trip.returnTime || "—"}
             </p>
           </>
         )}

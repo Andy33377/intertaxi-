@@ -16,7 +16,7 @@ const Header = () => {
 
   return (
     <>
-      <header className=" fixed top-0 left-1/2 -translate-x-1/2 bg-black text-white flex justify-between items-center h-[64px] w-[375px] z-50  ">
+      <header className="fixed top-0 inset-x-0 bg-black text-white flex justify-between items-center h-[64px] w-full z-50">
         <h2 className="ml-[24px] font-bold">InterTaxi</h2>
         <div className="flex justify-between gap-3">
           <h2>sign in</h2>

@@ -15,6 +15,13 @@ model Order {
   passengers Int
   childSeat  Boolean  @default(false)
   comment    String?
+  from       String
+  to         String
+  date       String
+  time       String
+  roundTrip  Boolean  @default(false)
+  returnDate String?
+  returnTime String?
   createdAt  DateTime @default(now())
 }
 

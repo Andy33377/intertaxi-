@@ -8,6 +8,13 @@ type Order = {
   passengers: number;
   childSeat: boolean;
   comment?: string | null;
+  from: string;
+  to: string;
+  date: string;
+  time: string;
+  roundTrip: boolean;
+  returnDate?: string | null;
+  returnTime?: string | null;
   createdAt: string;
 };
 
@@ -57,6 +64,26 @@ export default function OrdersPage() {
               key={o.id}
               className="bg-white rounded-lg shadow p-3 space-y-2 text-sm"
             >
+              <div className="flex justify-between">
+                <span className="font-semibold">Маршрут:</span>
+                <span>
+                  {o.from} → {o.to}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-semibold">Дата/время:</span>
+                <span>
+                  {o.date} {o.time}
+                </span>
+              </div>
+              {o.roundTrip && (
+                <div className="flex justify-between">
+                  <span className="font-semibold">Обратный рейс:</span>
+                  <span>
+                    {o.returnDate ?? "—"} {o.returnTime ?? ""}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="font-semibold">ID:</span>
                 <span>{o.id}</span>

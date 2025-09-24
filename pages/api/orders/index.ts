@@ -20,7 +20,20 @@ export default async function handler(
 
   if (req.method === "POST") {
     try {
-      const { name, phone, passengers, childSeat, comment } = req.body;
+      const {
+        name,
+        phone,
+        passengers,
+        childSeat,
+        comment,
+        from,
+        to,
+        date,
+        time,
+        roundTrip,
+        returnDate,
+        returnTime,
+      } = req.body;
       console.log("📥 BODY:", req.body);
 
       const order = await prisma.order.create({
@@ -30,6 +43,13 @@ export default async function handler(
           passengers: Number(passengers) || 1,
           childSeat: Boolean(childSeat),
           comment: comment || null,
+          from,
+          to,
+          date,
+          time,
+          roundTrip: Boolean(roundTrip),
+          returnDate: returnDate || null,
+          returnTime: returnTime || null,
         },
       });
 
