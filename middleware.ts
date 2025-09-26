@@ -1,8 +1,7 @@
-// middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-function unauthorizedResponse() {
+function unauthorized() {
   return new NextResponse("Authentication required", {
     status: 401,
     headers: { "WWW-Authenticate": 'Basic realm="Secure Area"' },
@@ -12,24 +11,22 @@ function unauthorizedResponse() {
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // защищаем только раздел админки
+  // пускаем всё, что не админка
   if (!pathname.startsWith("/admin")) return NextResponse.next();
 
   const auth = req.headers.get("authorization");
-  if (!auth?.startsWith("Basic ")) return unauthorizedResponse();
-
+  if (!auth?.startsWith("Basic ")) return unauthorized();
   try {
-    const base64 = auth.split(" ")[1] || "";
-    const [user, pass] = Buffer.from(base64, "base64").toString().split(":");
-
+    const [user, pass] = Buffer.from(auth.split(" ")[1], "base64")
+      .toString()
+      .split(":");
     if (user === process.env.DRIVER_USER && pass === process.env.DRIVER_PASS) {
       return NextResponse.next();
     }
   } catch {
-    // fallthrough
+    // ignore
   }
-
-  return unauthorizedResponse();
+  return unauthorized();
 }
 
 export const config = {

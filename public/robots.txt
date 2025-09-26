@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://intertaxi.vercel.app/sitemap.xml
