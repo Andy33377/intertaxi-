@@ -23,6 +23,21 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method === "GET") {
+    const auth = req.headers.authorization || "";
+    const ok =
+      auth.startsWith("Basic ") &&
+      (() => {
+        try {
+          const [u, p] = Buffer.from(auth.split(" ")[1], "base64")
+            .toString()
+            .split(":");
+          return u === process.env.DRIVER_USER && p === process.env.DRIVER_PASS;
+        } catch {
+          return false;
+        }
+      })();
+    if (!ok) return res.status(401).end("Unauthorized");
+
     try {
       const orders = await prisma.order.findMany({
         orderBy: { createdAt: "desc" },

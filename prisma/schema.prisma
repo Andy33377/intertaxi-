@@ -23,6 +23,9 @@ model Order {
   returnDate String?
   returnTime String?
   createdAt  DateTime @default(now())
+
+  @@index([createdAt], map: "idx_order_createdAt")
+  @@index([date, time], map: "idx_order_date_time")
 }
 
 model User {
