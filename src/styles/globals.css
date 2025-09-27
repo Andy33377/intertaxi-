@@ -3,15 +3,14 @@
 html,
 body {
   height: 100%;
-  max-width: 375px; /* фиксируем ширину */
-  margin: 0 auto; /* по центру */
-  background: #fff; /* фон */
-  overflow-x: hidden; /* убираем горизонтальный скролл */
+  margin: 0;
+  background: #fff;
+  overflow-x: hidden;
 }
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 64px; /* высота шапки */
+  scroll-padding-top: 64px;
 }
 
 body {
@@ -32,12 +31,4 @@ video {
   outline-offset: 2px;
 }
 
-.header {
-  position: fixed;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 375px;
-  z-index: 1000;
-  background-color: #fff;
-}
+/* Убираем старый CSS для шапки */
