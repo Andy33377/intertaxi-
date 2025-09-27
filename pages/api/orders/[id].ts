@@ -34,13 +34,14 @@ export default async function handler(
     try {
       await prisma.order.delete({ where: { id } });
       return res.status(204).end();
-    } catch (err: any) {
-      if (err.code === "P2025") {
+    } catch (err: unknown) {
+      const error = err as { code?: string; message?: string };
+      if (error.code === "P2025") {
         // Prisma: record not found
         return res.status(404).json({ error: "Order not found" });
       }
       console.error("❌ Ошибка при удалении заказа:", err);
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: error.message || "Unknown error" });
     }
   }
 

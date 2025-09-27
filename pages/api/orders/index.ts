@@ -43,9 +43,10 @@ export default async function handler(
         orderBy: { createdAt: "desc" },
       });
       return res.status(200).json(orders);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { message?: string };
       console.error("❌ Ошибка при получении заказов:", err);
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: error.message || "Unknown error" });
     }
   }
 
@@ -122,9 +123,10 @@ export default async function handler(
       }
 
       return res.status(201).json(order);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { message?: string };
       console.error("❌ Ошибка при создании заказа:", err);
-      return res.status(400).json({ error: err.message });
+      return res.status(400).json({ error: error.message || "Unknown error" });
     }
   }
 

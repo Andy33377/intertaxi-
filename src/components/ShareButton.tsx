@@ -18,7 +18,7 @@ export default function ShareButton() {
         await navigator.share(shareData);
         return;
       }
-    } catch (err) {
+    } catch (_) {
       console.log("Пользователь отменил шаринг");
       return;
     }
@@ -28,7 +28,7 @@ export default function ShareButton() {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch (_) {
       // Если не поддерживается clipboard API
       const textArea = document.createElement("textarea");
       textArea.value = window.location.href;

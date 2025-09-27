@@ -8,7 +8,7 @@ export default async function handler(
   try {
     await prisma.$queryRaw`SELECT 1`;
     return res.status(200).json({ ok: true });
-  } catch (e: any) {
-    return res.status(500).json({ ok: false, error: e.message });
+  } catch (e: unknown) {
+    return res.status(500).json({ ok: false, error: String(e) });
   }
 }
