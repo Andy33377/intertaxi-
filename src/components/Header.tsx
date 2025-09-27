@@ -1,11 +1,10 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
 
 const items = [
   { label: "Главная", target: "home" },
   { label: "Маршруты", target: "routes" },
-  // { label: "Автопарк", target: "cars" },
+  { label: "Автопарк", target: "cars" },
   { label: "О компании", target: "about" },
   { label: "Контакты", target: "contacts" },
 ];
@@ -24,26 +23,32 @@ const Header = () => {
 
   return (
     <>
-      <header className="fixed top-0 inset-x-0 bg-black text-white flex justify-between items-center h-[64px] w-full z-50">
-        <h2 className="ml-[24px] font-bold">InterTaxi</h2>
-        <div className="flex justify-between gap-3">
-          <button onClick={() => setOpen((v) => !v)} className="">
-            <svg
-              className="mr-[24px]"
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+      <header className="fixed top-0 left-0 right-0 bg-black text-white h-[64px] w-full z-50">
+        <div className="flex items-center justify-between w-full h-full px-4">
+          <h2 className="font-bold text-lg">InterTaxi</h2>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setOpen((v) => !v)}
+              className="p-2 -mr-2"
+              aria-label="Открыть меню"
             >
-              <path d="M4 8h16" />
-              <path d="M4 16h16" />
-            </svg>
-          </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M4 8h16" />
+                <path d="M4 16h16" />
+              </svg>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -51,14 +56,14 @@ const Header = () => {
       {open && (
         <div
           onClick={() => setOpen(false)}
-          className="fixed inset-x-0 top-[64px] bottom-0 bg-black/30 z-40"
+          className="fixed inset-0 top-[64px] bg-black/30 z-40"
         />
       )}
 
       {/* Само меню */}
       <nav
         onClick={(e) => e.stopPropagation()}
-        className={`absolute top-[64px] left-0 right-0 bg-white text-slate-900 shadow-lg transition-opacity duration-150 z-50 ${
+        className={`fixed top-[64px] left-0 right-0 bg-white text-slate-900 shadow-lg transition-opacity duration-150 z-50 ${
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       >
