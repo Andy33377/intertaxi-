@@ -21,7 +21,7 @@ function tooMany(req: NextApiRequest) {
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
-) {
+): Promise<void> {
   if (req.method === "GET") {
     const auth = req.headers.authorization || "";
     const ok =
@@ -36,17 +36,22 @@ export default async function handler(
           return false;
         }
       })();
-    if (!ok) return res.status(401).end("Unauthorized");
+    if (!ok) {
+      res.status(401).end("Unauthorized");
+      return;
+    }
 
     try {
       const orders = await prisma.order.findMany({
         orderBy: { createdAt: "desc" },
       });
-      return res.status(200).json(orders);
+      res.status(200).json(orders);
+      return;
     } catch (err: unknown) {
       const error = err as { message?: string };
       console.error("❌ Ошибка при получении заказов:", err);
-      return res.status(500).json({ error: error.message || "Unknown error" });
+      res.status(500).json({ error: error.message || "Unknown error" });
+      return;
     }
   }
 
@@ -68,11 +73,13 @@ export default async function handler(
       } = req.body;
 
       if (tooMany(req)) {
-        return res.status(429).json({ error: "Too many requests, try later" });
+        res.status(429).json({ error: "Too many requests, try later" });
+        return;
       }
 
       if (!name || !phone || !from || !to || !date || !time) {
-        return res.status(400).json({ error: "Missing required fields" });
+        res.status(400).json({ error: "Missing required fields" });
+        return;
       }
 
       const order = await prisma.order.create({
@@ -122,14 +129,16 @@ export default async function handler(
         }).catch((e) => console.error("Telegram error:", e));
       }
 
-      return res.status(201).json(order);
+      res.status(201).json(order);
+      return;
     } catch (err: unknown) {
       const error = err as { message?: string };
       console.error("❌ Ошибка при создании заказа:", err);
-      return res.status(400).json({ error: error.message || "Unknown error" });
+      res.status(400).json({ error: error.message || "Unknown error" });
+      return;
     }
   }
 
   res.setHeader("Allow", ["GET", "POST"]);
-  return res.status(405).end(`Method ${req.method} Not Allowed`);
+  res.status(405).end(`Method ${req.method} Not Allowed`);
 }
