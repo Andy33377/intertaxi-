@@ -1,21 +1,20 @@
 @import "tailwindcss";
 
-html,
-body {
-  height: 100%;
-  margin: 0;
-  background: #fff;
-  overflow-x: hidden;
-}
-
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 64px;
 }
 
 body {
+  margin: 0;
   @apply bg-white text-slate-900 antialiased;
-  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+  body {
+    max-width: 375px;
+    margin: 0 auto;
+  }
 }
 
 img,
@@ -30,5 +29,3 @@ video {
   outline: 2px solid rgb(16 185 129);
   outline-offset: 2px;
 }
-
-/* Убираем старый CSS для шапки */
