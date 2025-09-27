@@ -1,4 +1,3 @@
-// src/components/ShareButton.tsx
 "use client";
 import { useState } from "react";
 
@@ -18,7 +17,7 @@ export default function ShareButton() {
         await navigator.share(shareData);
         return;
       }
-    } catch (_) {
+    } catch {
       console.log("Пользователь отменил шаринг");
       return;
     }
@@ -28,7 +27,7 @@ export default function ShareButton() {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (_) {
+    } catch {
       // Если не поддерживается clipboard API
       const textArea = document.createElement("textarea");
       textArea.value = window.location.href;
