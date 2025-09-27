@@ -1,12 +1,11 @@
 "use client";
-import React from "react";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 
 const items = [
   { label: "Главная", target: "home" },
   { label: "Маршруты", target: "routes" },
-  { label: "Автопарк", target: "cars" },
+  // { label: "Автопарк", target: "cars" },
   { label: "О компании", target: "about" },
   { label: "Контакты", target: "contacts" },
 ];
@@ -14,12 +13,20 @@ const items = [
 const Header = () => {
   const [open, setOpen] = useState(false);
 
+  // Закрытие меню по Esc
+  useEffect(() => {
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onEsc);
+    return () => window.removeEventListener("keydown", onEsc);
+  }, []);
+
   return (
     <>
       <header className="fixed top-0 inset-x-0 bg-black text-white flex justify-between items-center h-[64px] w-full z-50">
         <h2 className="ml-[24px] font-bold">InterTaxi</h2>
         <div className="flex justify-between gap-3">
-          <h2>sign in</h2>
           <button onClick={() => setOpen((v) => !v)} className="">
             <svg
               className="mr-[24px]"
@@ -38,33 +45,48 @@ const Header = () => {
             </svg>
           </button>
         </div>
-
-        <nav
-          className={`absolute top-[64px] left-0 right-0 bg-white text-slate-900 shadow-lg transition-opacity duration-150 
-      ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
-        >
-          <ul className="py-2">
-            {items.map(({ label, target }) => (
-              <li key={target}>
-                <a
-                  href={`#${target}`}
-                  onClick={() => setOpen(false)}
-                  className="block w-full px-4 py-3 hover:bg-slate-100 active:bg-slate-200"
-                >
-                  {label}
-                </a>
-              </li>
-            ))}
-            <li className="px-4 pb-3">
-              <button className="w-full rounded-full bg-emerald-600 text-white font-semibold px-4 py-3 hover:bg-emerald-700">
-                Заказать поездку
-              </button>
-            </li>
-          </ul>
-        </nav>
       </header>
 
-      <main className="pt-[64px]">{/* Весь контент страницы тут */}</main>
+      {/* Бекдроп под меню */}
+      {open && (
+        <div
+          onClick={() => setOpen(false)}
+          className="fixed inset-x-0 top-[64px] bottom-0 bg-black/30 z-40"
+        />
+      )}
+
+      {/* Само меню */}
+      <nav
+        onClick={(e) => e.stopPropagation()}
+        className={`absolute top-[64px] left-0 right-0 bg-white text-slate-900 shadow-lg transition-opacity duration-150 z-50 ${
+          open ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        <ul className="py-2">
+          {items.map(({ label, target }) => (
+            <li key={target}>
+              <a
+                href={`#${target}`}
+                onClick={() => setOpen(false)}
+                className="block w-full px-4 py-3 hover:bg-slate-100 active:bg-slate-200"
+              >
+                {label}
+              </a>
+            </li>
+          ))}
+          <li className="px-4 pb-3">
+            <a
+              href="#contacts"
+              onClick={() => setOpen(false)}
+              className="block w-full rounded-full bg-emerald-600 text-white font-semibold px-4 py-3 hover:bg-emerald-700 text-center"
+            >
+              Запланировать поездку
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <main className="pt-[64px]">{/* Весь контент страницы */}</main>
     </>
   );
 };

@@ -7,7 +7,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     <>
       <DefaultSeo
         title="InterTaxi — Междугороднее такси"
-        description="Быстро и надёжно: поездки между городами. Онлайн‑заказ."
+        description="Быстро и надёжно: поездки между городами Молдовы и Приднестровья. Онлайн‑заказ."
         openGraph={{
           type: "website",
           url: "https://intertaxi.vercel.app",
@@ -16,6 +16,16 @@ export default function MyApp({ Component, pageProps }: AppProps) {
             "Быстро и надёжно: поездки между городами. Онлайн‑заказ.",
           images: [{ url: "https://intertaxi.vercel.app/og.jpg" }],
         }}
+        additionalLinkTags={[
+          {
+            rel: "icon",
+            href: "/favicon.ico",
+          },
+          {
+            rel: "apple-touch-icon",
+            href: "/apple-touch-icon.png",
+          },
+        ]}
       />
       <Component {...pageProps} />
     </>

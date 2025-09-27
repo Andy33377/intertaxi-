@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     siteName: "InterTaxi",
     images: [
       {
-        url: "https://intertaxi.example.com/og-image.jpg", // 👉 твоя картинка 1200x630
+        url: "https://intertaxi.vercel.app/og.jpg",
         width: 1200,
         height: 630,
         alt: "InterTaxi — Междугороднее такси",
@@ -51,21 +51,21 @@ export default function HomePage() {
     <div>
       <Header />
 
-      <section id="home" className="pt-[24px]">
+      <section id="home" className="pt-[24px] scroll-mt-[80px]">
         <h1 className="text-2xl pl-[24px] font-bold ">
-          Быстро. Надёжно. Междугороднее такси.
+          Быстро. Надёжно. Междугороднее такси. Молдова и Приднестровье.
         </h1>
       </section>
 
-      <section id="contacts">
+      <section className="scroll-mt-[50px]" id="contacts">
         <Contacts />
       </section>
 
-      <section id="routes">
+      <section className="scroll-mt-[50px]" id="routes">
         <PriceList />
       </section>
 
-      <section id="about">
+      <section className="scroll-mt-[50px]" id="about">
         <AboutUs />
       </section>
     </div>
