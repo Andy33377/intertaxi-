@@ -1,23 +1,24 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { prisma } from "../../../src/lib/prisma";
+
+let users: Array<{ id: number; name: string }> = [];
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
-) {
+): Promise<void> {
   if (req.method === "GET") {
-    const users = await prisma.user.findMany();
-    return res.status(200).json(users);
+    res.status(200).json(users);
+    return;
   }
 
   if (req.method === "POST") {
-    const { name, email } = req.body;
-    const user = await prisma.user.create({
-      data: { name, email },
-    });
-    return res.status(201).json(user);
+    const { name } = req.body as { name?: string };
+    const user = { id: Date.now(), name: name || "noname" };
+    users.push(user);
+    res.status(201).json(user);
+    return;
   }
 
-  res.setHeader("Allow", ["GET", "POST"]);
-  return res.status(405).end();
+  res.status(405).end();
+  return;
 }
