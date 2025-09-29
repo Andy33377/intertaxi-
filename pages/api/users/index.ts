@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-let users: Array<{ id: number; name: string }> = [];
+const users: Array<{ id: number; name: string }> = [];
 
 export default async function handler(
   req: NextApiRequest,
