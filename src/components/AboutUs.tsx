@@ -23,7 +23,11 @@ const AboutUs = () => {
       <div className="border-0 text-center w-full mt-10 mb-10 rounded-2xl p-6 bg-[#A9D3D9] flex flex-col gap-4 max-w-[320px] mx-auto shadow-sm">
         <h2 className="text-black text-2xl font-black">Контакты</h2>
         <p className="text-lg">Телефон</p>
-        <p className="text-lg font-semibold">+373 (779)51963</p>
+        <p className="text-lg font-semibold">
+          061019775
+          <br />
+          +373 (779) 51963
+        </p>
         <a
           href="tel:+37389056"
           className="flex justify-center rounded-2xl bg-black text-white font-semibold w-full py-3 hover:bg-gray-800 transition"
