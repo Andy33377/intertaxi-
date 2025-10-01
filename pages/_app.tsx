@@ -13,18 +13,23 @@ export default function MyApp({ Component, pageProps }: AppProps) {
           url: "https://intertaxi.vercel.app",
           title: "InterTaxi — Междугороднее такси",
           description:
-            "Быстро и надёжно: поездки между городами. Онлайн‑заказ.",
-          images: [{ url: "https://intertaxi.vercel.app/og.jpg" }],
+            "Быстро и надёжно: поездки между городами Молдовы и Приднестровья.",
+
+          images: [
+            {
+              url: "https://intertaxi.vercel.app/og-v2.jpg",
+              width: 1200,
+              height: 630,
+              alt: "InterTaxi — Междугороднее такси",
+            },
+          ],
+        }}
+        twitter={{
+          cardType: "summary_large_image",
         }}
         additionalLinkTags={[
-          {
-            rel: "icon",
-            href: "/favicon.ico",
-          },
-          {
-            rel: "apple-touch-icon",
-            href: "/apple-touch-icon.png",
-          },
+          { rel: "icon", href: "/favicon.ico" },
+          { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
         ]}
       />
       <Component {...pageProps} />
