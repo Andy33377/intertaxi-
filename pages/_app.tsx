@@ -27,10 +27,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
         twitter={{
           cardType: "summary_large_image",
         }}
-        additionalLinkTags={[
-          { rel: "icon", href: "/favicon.ico" },
-          { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
-        ]}
+        additionalLinkTags={[{ rel: "icon", href: "/favicon.ico" }]}
       />
       <Component {...pageProps} />
     </>
