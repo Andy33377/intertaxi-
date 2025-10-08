@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 const items = [
   { label: "Главная", target: "home" },
   { label: "Маршруты", target: "routes" },
-  { label: "Автопарк", target: "cars" },
   { label: "О компании", target: "about" },
   { label: "Контакты", target: "contacts" },
 ];
