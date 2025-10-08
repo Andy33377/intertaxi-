@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { GetServerSideProps } from "next";
 
 type Order = {
   id: number;
@@ -18,44 +18,12 @@ type Order = {
   createdAt: string;
 };
 
-export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  async function load() {
-    try {
-      const res = await fetch("/api/orders");
-      if (!res.ok) throw new Error("Ошибка загрузки заказов");
-      const data = await res.json();
-      setOrders(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    load();
-    const interval = setInterval(load, 5000); // обновление каждые 5 сек
-    return () => clearInterval(interval);
-  }, []);
-
-  async function onDelete(id: number) {
-    if (!confirm("Удалить заказ?")) return;
-    const res = await fetch(`/api/orders/${id}`, { method: "DELETE" });
-    if (res.ok) {
-      setOrders((prev) => prev.filter((o) => o.id !== id));
-    }
-  }
-
+export default function OrdersPage({ orders }: { orders: Order[] }) {
   return (
     <AdminLayout>
       <h1 className="text-2xl font-bold mb-4">Заказы</h1>
 
-      {loading ? (
-        <div className="text-center text-gray-500 py-6">Загрузка...</div>
-      ) : orders.length === 0 ? (
+      {orders.length === 0 ? (
         <div className="text-center text-gray-500 py-6">Заказов пока нет</div>
       ) : (
         <div className="space-y-3">
@@ -76,14 +44,7 @@ export default function OrdersPage() {
                   {o.date} {o.time}
                 </span>
               </div>
-              {o.roundTrip && (
-                <div className="flex justify-between">
-                  <span className="font-semibold">Обратный рейс:</span>
-                  <span>
-                    {o.returnDate ?? "—"} {o.returnTime ?? ""}
-                  </span>
-                </div>
-              )}
+
               <div className="flex justify-between">
                 <span className="font-semibold">ID:</span>
                 <span>{o.id}</span>
@@ -114,13 +75,6 @@ export default function OrdersPage() {
                 <span className="font-semibold">Создан:</span>
                 <span>{new Date(o.createdAt).toLocaleString()}</span>
               </div>
-
-              <button
-                onClick={() => onDelete(o.id)}
-                className="w-full bg-red-500 text-white py-2 rounded mt-2 hover:bg-red-600"
-              >
-                Удалить
-              </button>
             </div>
           ))}
         </div>
@@ -128,3 +82,21 @@ export default function OrdersPage() {
     </AdminLayout>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const host = ctx.req.headers["x-forwarded-host"] || ctx.req.headers.host;
+  const proto = ctx.req.headers["x-forwarded-proto"] || "https";
+  const baseUrl = `${proto}://${host}`;
+  const auth = ctx.req.headers.authorization || "";
+
+  const res = await fetch(`${baseUrl}/api/orders`, {
+    headers: { Authorization: auth },
+  });
+
+  if (res.status === 401) {
+    return { notFound: true };
+  }
+
+  const orders = res.ok ? await res.json() : [];
+  return { props: { orders } };
+};
