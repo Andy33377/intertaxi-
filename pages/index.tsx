@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     siteName: "InterTaxi",
     images: [
       {
-        url: "https://intertaxi.vercel.app/og.jpg",
+        url: "https://intertaxi.vercel.app/og-1.jpg",
         width: 1200,
         height: 630,
         alt: "InterTaxi — Междугороднее такси",
