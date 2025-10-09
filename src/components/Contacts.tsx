@@ -31,7 +31,7 @@ export default function ContactsPage() {
       <div className="flex gap-4 text-3xl items-center justify-center pt-7 pb-3">
         {/* Telegram Icon */}
         <a
-          href="https://t.me/@AlexandrZaluzhets"
+          href="https://t.me/AlexandrZaluzhets"
           target="_blank"
           rel="noopener noreferrer"
         >

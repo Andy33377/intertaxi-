@@ -1,17 +1,20 @@
 "use client";
 import React, { useEffect, useState } from "react";
 
-const items = [
+type NavItem = { label: string; target?: string; href?: string };
+
+const items: NavItem[] = [
   { label: "Главная", target: "home" },
   { label: "Маршруты", target: "routes" },
   { label: "О компании", target: "about" },
   { label: "Контакты", target: "contacts" },
+  { label: "Мои заказы", href: "/my-orders" },
 ];
 
 const Header = () => {
   const [open, setOpen] = useState(false);
 
-  // Закрытие меню по Esc
+  // 🔹 Закрытие меню по клавише Esc
   useEffect(() => {
     const onEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -51,7 +54,7 @@ const Header = () => {
         </div>
       </header>
 
-      {/* Бекдроп под меню */}
+      {/* 🔹 Бекдроп под меню */}
       {open && (
         <div
           onClick={() => setOpen(false)}
@@ -59,7 +62,7 @@ const Header = () => {
         />
       )}
 
-      {/* Само меню */}
+      {/* 🔹 Само меню */}
       <nav
         onClick={(e) => e.stopPropagation()}
         className={`fixed top-[64px] left-0 right-0 bg-white text-slate-900 shadow-lg transition-opacity duration-150 z-50 ${
@@ -67,17 +70,23 @@ const Header = () => {
         }`}
       >
         <ul className="py-2">
-          {items.map(({ label, target }) => (
-            <li key={target}>
+          {items.map((it) => (
+            <li key={it.label}>
               <a
-                href={`#${target}`}
+                href={it.href ?? `#${it.target}`}
                 onClick={() => setOpen(false)}
                 className="block w-full px-4 py-3 hover:bg-slate-100 active:bg-slate-200"
+                rel={
+                  it.href?.startsWith("http")
+                    ? "noopener noreferrer"
+                    : undefined
+                }
               >
-                {label}
+                {it.label}
               </a>
             </li>
           ))}
+
           <li className="px-4 pb-3">
             <a
               href="#contacts"
@@ -90,6 +99,7 @@ const Header = () => {
         </ul>
       </nav>
 
+      {/* Контент с отступом под фиксированный header */}
       <main className="pt-[64px]">{/* Весь контент страницы */}</main>
     </>
   );

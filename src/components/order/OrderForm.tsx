@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { addOrder } from "@/lib/ordersLocal";
 
 export default function OrderForm() {
   type Trip = {
@@ -31,21 +32,46 @@ export default function OrderForm() {
     }
   }, []);
 
-  // 🔹 Локальный state для контактов
+  // 🔹 Локальный state
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [passengers, setPassengers] = useState(1);
   const [childSeat, setChildSeat] = useState(false);
   const [comment, setComment] = useState("");
 
+  // 🔹 Форматирование телефона (Молдова: +373 XX XXX XXX)
+  function formatMdPhone(raw: string) {
+    let d = raw.replace(/\D/g, "");
+    if (!d) return "";
+    if (d.startsWith("00")) d = d.slice(2);
+    if (d.startsWith("373")) d = d.slice(3);
+    d = d.slice(0, 8);
+    const p1 = d.slice(0, 2);
+    const p2 = d.slice(2, 5);
+    const p3 = d.slice(5, 8);
+    return `+373${p1 ? " " + p1 : ""}${p2 ? " " + p2 : ""}${
+      p3 ? " " + p3 : ""
+    }`.trim();
+  }
+
+  function normalizePhoneForApi(formatted: string) {
+    return formatted.replace(/\s+/g, "");
+  }
+
   // 🔹 Отправка заказа
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    // Мини-валидация телефона
+    if (!/^\+373\d{8}$/.test(normalizePhoneForApi(phone))) {
+      alert("Введите телефон в формате +373 XX XXX XXX");
+      return;
+    }
+
     const payload = {
       ...trip,
       name: name.trim(),
-      phone: phone.trim(),
+      phone: normalizePhoneForApi(phone),
       passengers,
       childSeat,
       comment: comment.trim(),
@@ -70,6 +96,30 @@ export default function OrderForm() {
       const data = await res.json();
       console.log("✅ Заказ успешно создан:", data);
 
+      // 🔹 Пишем заказ в историю (localStorage)
+      try {
+        addOrder({
+          id: data.id,
+          createdAt: data.createdAt,
+          name: payload.name,
+          phone: payload.phone,
+          passengers: payload.passengers,
+          childSeat: payload.childSeat,
+          comment: payload.comment || null,
+          from: payload.from!,
+          to: payload.to!,
+          date: payload.date!,
+          time: payload.time!,
+          roundTrip: payload.roundTrip,
+          returnDate: (trip as any).returnDate ?? null,
+          returnTime: (trip as any).returnTime ?? null,
+        });
+      } catch {
+        /* игнорируем ошибку локального сохранения */
+      }
+
+      // 🔹 Очищаем временные данные и переходим на страницу благодарности
+      localStorage.removeItem("tripData");
       router.push("/thanks");
     } catch (err) {
       console.error("🚨 Ошибка сети или кода:", err);
@@ -97,6 +147,7 @@ export default function OrderForm() {
     );
   }
 
+  // 🔹 Основная форма
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-md mx-auto p-4">
       <h2 className="text-xl font-bold text-center mb-4">
@@ -149,37 +200,64 @@ export default function OrderForm() {
         <label className="block text-sm font-medium">Телефон *</label>
         <input
           type="tel"
+          inputMode="tel"
           value={phone}
-          onChange={(e) => setPhone(e.target.value.replace(/[^0-9+]/g, ""))}
+          onChange={(e) => setPhone(formatMdPhone(e.target.value))}
           className="mt-1 w-full rounded-2xl border p-3"
-          placeholder="+373 ..."
+          placeholder="+373 77 951 963"
           autoComplete="tel"
+          maxLength={16}
           required
         />
+        <p className="mt-1 text-xs text-slate-500">Формат: +373 XX XXX XXX</p>
       </div>
 
-      {/* Пассажиры и кресло */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium">Пассажиров</label>
+      {/* Пассажиры */}
+      <div>
+        <label className="block text-sm font-medium">Пассажиры</label>
+        <div className="flex items-center gap-2 mt-2">
+          <button
+            type="button"
+            onClick={() => setPassengers((p) => Math.max(1, p - 1))}
+            className="px-3 py-2 rounded-2xl border"
+            aria-label="Уменьшить"
+          >
+            −
+          </button>
           <input
             type="number"
-            min={1}
-            max={6}
+            inputMode="numeric"
+            className="w-20 text-center rounded-2xl border p-3"
             value={passengers}
-            onChange={(e) => setPassengers(+e.target.value)}
-            className="mt-1 w-full rounded-2xl border p-3"
+            min={1}
+            max={4}
+            step={1}
+            onChange={(e) => {
+              const n = parseInt(e.target.value.replace(/^0+/, "") || "0", 10);
+              if (Number.isNaN(n)) return;
+              setPassengers(Math.max(1, Math.min(4, n)));
+            }}
           />
+          <button
+            type="button"
+            onClick={() => setPassengers((p) => Math.min(4, p + 1))}
+            className="px-3 py-2 rounded-2xl border"
+            aria-label="Увеличить"
+          >
+            +
+          </button>
         </div>
-        <label className="flex items-center gap-2 mt-7">
-          <input
-            type="checkbox"
-            checked={childSeat}
-            onChange={(e) => setChildSeat(e.target.checked)}
-          />
-          Детское кресло
-        </label>
       </div>
+
+      {/* Детское кресло */}
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={childSeat}
+          onChange={(e) => setChildSeat(e.target.checked)}
+        />
+        Детское кресло
+      </label>
 
       {/* Комментарий */}
       <div>
