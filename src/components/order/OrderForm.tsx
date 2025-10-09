@@ -111,8 +111,8 @@ export default function OrderForm() {
           date: payload.date!,
           time: payload.time!,
           roundTrip: payload.roundTrip,
-          returnDate: (trip as any).returnDate ?? null,
-          returnTime: (trip as any).returnTime ?? null,
+          returnDate: trip.returnDate ?? null,
+          returnTime: trip.returnTime ?? null,
         });
       } catch {
         /* игнорируем ошибку локального сохранения */
