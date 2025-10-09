@@ -122,11 +122,19 @@ export default async function handler(
           `ID: ${order.id}\n\n` +
           `🔗 Админка: ${adminUrl}`;
 
-        fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chat_id: chat, text }),
-        }).catch((e) => console.error("Telegram error:", e));
+        try {
+          const tgRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: chat, text }),
+          });
+          if (!tgRes.ok) {
+            const t = await tgRes.text();
+            console.error("Telegram send failed:", tgRes.status, t);
+          }
+        } catch (e) {
+          console.error("Telegram error:", e);
+        }
       }
 
       res.status(201).json(order);
