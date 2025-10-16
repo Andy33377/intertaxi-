@@ -20,6 +20,7 @@ export default function OrderForm() {
   // 🔹 Состояние маршрута
   const [trip, setTrip] = useState<Trip>({});
   const [tripLoaded, setTripLoaded] = useState(false);
+  const [country, setCountry] = useState<"MD" | "PMR" | "RU">("MD");
 
   useEffect(() => {
     try {
@@ -39,35 +40,65 @@ export default function OrderForm() {
   const [childSeat, setChildSeat] = useState(false);
   const [comment, setComment] = useState("");
 
-  // 🔹 Форматирование телефона (Молдова: +373 XX XXX XXX)
-  function formatMdPhone(raw: string) {
-    let d = raw.replace(/\D/g, "");
-    if (!d) return "";
-    if (d.startsWith("00")) d = d.slice(2);
-    if (d.startsWith("373")) d = d.slice(3);
-    d = d.slice(0, 8);
-    const p1 = d.slice(0, 2);
-    const p2 = d.slice(2, 5);
-    const p3 = d.slice(5, 8);
-    return `+373${p1 ? " " + p1 : ""}${p2 ? " " + p2 : ""}${
-      p3 ? " " + p3 : ""
-    }`.trim();
+  // Форматирование телефона по стране
+  function formatPhone(raw: string, c: "MD" | "PMR" | "RU") {
+    let digits = raw.replace(/\D/g, "");
+    if (!digits) return "";
+    // Убираем префикс 00
+    if (digits.startsWith("00")) digits = digits.slice(2);
+
+    if (c === "MD" || c === "PMR") {
+      if (digits.startsWith("373")) digits = digits.slice(3);
+      // Ожидаем 8 цифр
+      digits = digits.slice(0, 8);
+      const p1 = digits.slice(0, 2);
+      const p2 = digits.slice(2, 5);
+      const p3 = digits.slice(5, 8);
+      return `+373${p1 ? " " + p1 : ""}${p2 ? " " + p2 : ""}${
+        p3 ? " " + p3 : ""
+      }`.trim();
+    }
+
+    // RU: +7 (XXX) XXX-XX-XX
+    if (digits.startsWith("7")) digits = digits.slice(1);
+    if (digits.startsWith("8")) digits = digits.slice(1); // часто вводят 8XXXXXXXXXX
+    digits = digits.slice(0, 10);
+    const a = digits.slice(0, 3);
+    const b = digits.slice(3, 6);
+    const c4 = digits.slice(6, 8);
+    const d4 = digits.slice(8, 10);
+
+    let body = "";
+    if (a) body = ` (${a}`;
+    if (b) body += `) ${b}`;
+    if (c4) body += `-${c4}`;
+    if (d4) body += `-${d4}`;
+    return `+7${body}`.trim();
   }
 
   function normalizePhoneForApi(formatted: string) {
-    return formatted.replace(/\s+/g, "");
+    return formatted.replace(/[^+\d]/g, "");
   }
 
   // 🔹 Отправка заказа
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Мини-валидация телефона
-    if (!/^\+373\d{8}$/.test(normalizePhoneForApi(phone))) {
-      alert("Введите телефон в формате +373 XX XXX XXX");
+    // Мини-валидация телефона по выбранной стране
+    const normalized = normalizePhoneForApi(phone);
+    const valid =
+      (country === "MD" && /^\+373\d{8}$/.test(normalized)) ||
+      (country === "PMR" && /^\+373\d{8}$/.test(normalized)) ||
+      (country === "RU" && /^\+7\d{10}$/.test(normalized));
+
+    if (!valid) {
+      alert(
+        country === "RU"
+          ? "Введите телефон в формате +7 (XXX) XXX-XX-XX"
+          : "Введите телефон в формате +373 XX XXX XXX"
+      );
       return;
     }
-
     const payload = {
       ...trip,
       name: name.trim(),
@@ -195,21 +226,41 @@ export default function OrderForm() {
         />
       </div>
 
-      {/* Телефон */}
       <div>
         <label className="block text-sm font-medium">Телефон *</label>
-        <input
-          type="tel"
-          inputMode="tel"
-          value={phone}
-          onChange={(e) => setPhone(formatMdPhone(e.target.value))}
-          className="mt-1 w-full rounded-2xl border p-3"
-          placeholder="+373 77 951 963"
-          autoComplete="tel"
-          maxLength={16}
-          required
-        />
-        <p className="mt-1 text-xs text-slate-500">Формат: +373 XX XXX XXX</p>
+        <div className="mt-1 flex gap-2">
+          <select
+            className="w-36 rounded-2xl border p-3 bg-white"
+            value={country}
+            onChange={(e) => {
+              const c = e.target.value as "MD" | "PMR" | "RU";
+              setCountry(c);
+              setPhone((prev) => formatPhone(prev, c));
+            }}
+          >
+            <option value="MD">🇲🇩 +373 (Молдова)</option>
+            <option value="PMR">🇲🇩 +373 (ПМР)</option>
+            <option value="RU">🇷🇺 +7 (Россия)</option>
+          </select>
+          <input
+            type="tel"
+            inputMode="tel"
+            value={phone}
+            onChange={(e) => setPhone(formatPhone(e.target.value, country))}
+            className="flex-1 rounded-2xl border p-3"
+            placeholder={
+              country === "RU" ? "+7 (9XX) XXX-XX-XX" : "+373 XX XXX XXX"
+            }
+            autoComplete="tel"
+            maxLength={country === "RU" ? 18 : 16}
+            required
+          />
+        </div>
+        <p className="mt-1 text-xs text-slate-500">
+          {country === "RU"
+            ? "Формат: +7 (XXX) XXX-XX-XX"
+            : "Формат: +373 XX XXX XXX"}
+        </p>
       </div>
 
       {/* Пассажиры */}
