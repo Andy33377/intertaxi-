@@ -1,11 +1,16 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { cities } from "@/lib/cities";
+import { mdPmCities, uaCities } from "@/lib/cities";
 
 export default function ContactsPage() {
   const router = useRouter();
   const [roundTrip, setRoundTrip] = useState(false);
+
+  const cityOptions = [
+    { label: "Молдова / ПМР", cities: mdPmCities },
+    { label: "Украина", cities: uaCities },
+  ];
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -119,10 +124,21 @@ export default function ContactsPage() {
             <option value="" disabled>
               Выберите пункт отправления
             </option>
-            {cities.map((city) => (
-              <option key={city} value={city}>
-                {city}
-              </option>
+            {cityOptions.map((group) => (
+              <React.Fragment key={group.label}>
+                <option
+                  value={`__group_${group.label}__`}
+                  disabled
+                  className="font-semibold text-gray-500"
+                >
+                  ─ {group.label} ─
+                </option>
+                {group.cities.map((city) => (
+                  <option key={`${group.label}-${city}`} value={city}>
+                    {city}
+                  </option>
+                ))}
+              </React.Fragment>
             ))}
           </select>
 
@@ -136,10 +152,21 @@ export default function ContactsPage() {
             <option value="" disabled>
               Выберите пункт назначения
             </option>
-            {cities.map((city) => (
-              <option key={city} value={city}>
-                {city}
-              </option>
+            {cityOptions.map((group) => (
+              <React.Fragment key={group.label}>
+                <option
+                  value={`__group_${group.label}__`}
+                  disabled
+                  className="font-semibold text-gray-500"
+                >
+                  ─ {group.label} ─
+                </option>
+                {group.cities.map((city) => (
+                  <option key={`${group.label}-${city}`} value={city}>
+                    {city}
+                  </option>
+                ))}
+              </React.Fragment>
             ))}
           </select>
 
@@ -180,10 +207,21 @@ export default function ContactsPage() {
                 <option value="" disabled>
                   Выберите пункт назначения (обратно)
                 </option>
-                {cities.map((city) => (
-                  <option key={city} value={city}>
-                    {city}
-                  </option>
+                {cityOptions.map((group) => (
+                  <React.Fragment key={group.label}>
+                    <option
+                      value=""
+                      disabled
+                      className="font-semibold text-gray-500"
+                    >
+                      ─ {group.label} ─
+                    </option>
+                    {group.cities.map((city) => (
+                      <option key={`${group.label}-${city}`} value={city}>
+                        {city}
+                      </option>
+                    ))}
+                  </React.Fragment>
                 ))}
               </select>
 

@@ -4,8 +4,8 @@ import Header from "../src/components/Header";
 import Contacts from "../src/components/Contacts";
 import PriceList from "../src/components/PriceList";
 import AboutUs from "../src/components/AboutUs";
+import AutoPark from "../src/components/AutoPark";
 
-// ✅ SEO для главной страницы
 export const metadata: Metadata = {
   title: "InterTaxi — Междугороднее такси по Молдове и Приднестровью",
   description:
@@ -51,22 +51,41 @@ export default function HomePage() {
     <div>
       <Header />
 
+      {/* Заголовок по центру */}
       <section id="home" className="pt-[24px] scroll-mt-[80px]">
-        <h1 className="text-2xl pl-[24px] font-bold ">
-          Быстро. Надёжно. Междугороднее такси. Молдова и Приднестровье.
-        </h1>
+        <div className="max-w-6xl mx-auto px-4">
+          <h1 className="text-2xl md:text-3xl font-bold text-center">
+            Быстро. Надёжно. Междугороднее такси. Молдова и Приднестровье.
+          </h1>
+        </div>
       </section>
 
+      {/* Contacts - отдельно */}
       <section className="scroll-mt-[50px]" id="contacts">
-        <Contacts />
+        <div className="max-w-6xl mx-auto px-4">
+          <Contacts />
+        </div>
       </section>
 
+      {/* Маршруты - всю ширину */}
       <section className="scroll-mt-[50px]" id="routes">
-        <PriceList />
+        <div className="max-w-6xl mx-auto px-4">
+          <PriceList />
+        </div>
       </section>
 
-      <section className="scroll-mt-[50px]" id="about">
-        <AboutUs />
+      {/* Внизу: Автопарк слева, AboutUs справа */}
+      <section className="scroll-mt-[50px]" id="autopark-about">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-6 lg:gap-8 items-start">
+            <div id="autopark">
+              <AutoPark />
+            </div>
+            <div id="about">
+              <AboutUs />
+            </div>
+          </div>
+        </div>
       </section>
     </div>
   );
