@@ -1,6 +1,7 @@
 import Head from "next/head";
 import Header from "@/components/Header";
 import EvacuatorPriceList from "@/components/EvacuatorPriceList";
+import Link from "next/link";
 
 export default function EvacuatorsPage() {
   return (
@@ -204,12 +205,12 @@ export default function EvacuatorsPage() {
 
           {/* Back Button */}
           <div className="text-center">
-            <a
+            <Link
               href="/#home"
               className="inline-block bg-black text-white rounded-xl px-8 py-3 font-semibold hover:bg-gray-800 transition"
             >
               Вернуться на главную InterTaxi
-            </a>
+            </Link>
           </div>
         </div>
       </main>

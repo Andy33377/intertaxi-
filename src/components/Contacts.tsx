@@ -42,11 +42,11 @@ export default function ContactsPage() {
     const payload = {
       from,
       to,
-      date: data.get("date"),
+      date: data.get("date") as string,
       time: data.get("time"),
       roundTrip,
       returnTo: returnTo || null,
-      returnDate: data.get("returnDate") || null,
+      returnDate: roundTrip ? (data.get("date") as string) : null,
       returnTime: data.get("returnTime") || null,
     };
 

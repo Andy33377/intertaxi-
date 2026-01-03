@@ -113,7 +113,9 @@ const Header = () => {
               <a
                 href={it.href ?? `#${it.target}`}
                 onClick={() => setOpen(false)}
-                className="block w-full px-4 py-3 hover:bg-slate-100 active:bg-slate-200"
+                className={`block w-full px-4 py-3 hover:bg-slate-100 active:bg-slate-200 ${
+                  it.label === "Эвакуаторы" ? "font-bold" : ""
+                }`}
                 rel={
                   it.href?.startsWith("http")
                     ? "noopener noreferrer"

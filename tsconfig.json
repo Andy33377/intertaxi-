@@ -22,16 +22,14 @@
       "@/*": ["./src/*"]
     }
   },
-
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts",
     ".next/app/components/Header.tsx",
     ".next/app/components/Contacts.tsx",
     ".next/app/components/PriceList.tsx",
     ".next/app/components/AboutUs.tsx"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", ".next"]
 }
