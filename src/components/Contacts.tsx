@@ -16,13 +16,36 @@ export default function ContactsPage() {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
 
+    const from = data.get("from") as string;
+    const to = data.get("to") as string;
+    const returnTo = roundTrip ? (data.get("returnTo") as string) : null;
+
+    // Валидация: проверяем, что не выбраны заголовки групп
+    if (!from || from.startsWith("__group_") || from === "") {
+      alert("Пожалуйста, выберите пункт отправления");
+      return;
+    }
+
+    if (!to || to.startsWith("__group_") || to === "") {
+      alert("Пожалуйста, выберите пункт назначения");
+      return;
+    }
+
+    if (
+      roundTrip &&
+      (!returnTo || returnTo.startsWith("__group_") || returnTo === "")
+    ) {
+      alert("Пожалуйста, выберите пункт назначения для обратной поездки");
+      return;
+    }
+
     const payload = {
-      from: data.get("from"),
-      to: data.get("to"),
+      from,
+      to,
       date: data.get("date"),
       time: data.get("time"),
       roundTrip,
-      returnTo: data.get("returnTo") || null,
+      returnTo: returnTo || null,
       returnDate: data.get("returnDate") || null,
       returnTime: data.get("returnTime") || null,
     };
@@ -210,7 +233,7 @@ export default function ContactsPage() {
                 {cityOptions.map((group) => (
                   <React.Fragment key={group.label}>
                     <option
-                      value=""
+                      value={`__group_${group.label}__`}
                       disabled
                       className="font-semibold text-gray-500"
                     >
