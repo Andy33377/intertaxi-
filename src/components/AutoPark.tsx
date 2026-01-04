@@ -6,26 +6,26 @@ const cars = [
   {
     id: 1,
     image: "/car2.png",
-    name: "Mercedes-Benz E-Class",
+    name: "Volkswagen Transporter T4",
     description:
-      "Комфортабельный седан премиум-класса для длительных поездок. Просторный салон, кондиционер, удобные кресла.",
+      "Просторный фургон для комфортных поездок. Большой багажник, удобные кресла, идеален для групп и перевозки багажа.",
     seats: 4,
-    fuel: "бензин",
+    fuel: "Дизель",
     childSeat: true,
     ac: true,
-    price: "От 25€/день",
+    largeLuggage: true,
   },
   {
     id: 2,
     image: "/car1.png",
-    name: "BMW 5 Series",
+    name: "Volkswagen Touran",
     description:
-      "Современный бизнес-седан с отличной динамикой и комфортом. Идеален для деловых поездок и путешествий.",
+      "Компактный минивэн для семейных поездок. Удобный салон, экономичный расход, отличный выбор для междугородних маршрутов.",
     seats: 4,
-    fuel: "бензин",
+    fuel: "Дизель",
     childSeat: true,
     ac: true,
-    price: "От 30€/день",
+    largeLuggage: false,
   },
 ];
 
@@ -148,6 +148,16 @@ const AutoPark = () => {
                     className="w-5 h-5 brightness-0"
                   />
                   <span>Кондиционер</span>
+                </span>
+              )}
+              {cars[currentIndex].largeLuggage && (
+                <span className="flex items-center gap-1.5">
+                  <img
+                    src="/checked_bag_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg"
+                    alt=""
+                    className="w-5 h-5 brightness-0"
+                  />
+                  <span>большой багаж</span>
                 </span>
               )}
             </div>
