@@ -1,19 +1,18 @@
 "use client";
 import React, { useState } from "react";
 
-// Массив фотографий машин с описаниями и характеристиками
 const cars = [
   {
     id: 1,
-    image: "/car2.png",
-    name: "Volkswagen Transporter T4",
+    image: "/car0.png",
+    name: "Volkswagen Golf",
     description:
-      "Просторный фургон для комфортных поездок. Большой багажник, удобные кресла, идеален для групп и перевозки багажа.",
-    seats: 4,
+      "Компактный и экономичный хэтчбек для городских и междугородних поездок. Удобный салон и комфортная подвеска.",
+    seats: 5,
     fuel: "Дизель",
     childSeat: true,
     ac: true,
-    largeLuggage: true,
+    largeLuggage: false,
   },
   {
     id: 2,
@@ -21,11 +20,23 @@ const cars = [
     name: "Volkswagen Touran",
     description:
       "Компактный минивэн для семейных поездок. Удобный салон, экономичный расход, отличный выбор для междугородних маршрутов.",
-    seats: 4,
+    seats: 6,
     fuel: "Дизель",
     childSeat: true,
     ac: true,
     largeLuggage: false,
+  },
+  {
+    id: 3,
+    image: "/car2.png",
+    name: "Volkswagen Transporter T4",
+    description:
+      "Просторный фургон для комфортных поездок. Большой багажник, удобные кресла, идеален для групп и перевозки багажа.",
+    seats: 6,
+    fuel: "Дизель",
+    childSeat: true,
+    ac: true,
+    largeLuggage: true,
   },
 ];
 
