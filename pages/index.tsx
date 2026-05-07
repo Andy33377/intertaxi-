@@ -50,6 +50,17 @@ export default function HomePage() {
   return (
     <div>
       <Header />
+      <div className="relative w-screen ml-[calc(50%-50vw)] overflow-hidden">
+        {/* затемнение фона */}
+        <div className="absolute inset-0 bg-black"></div>
+
+        {/* картинка по центру */}
+        <img
+          src="/header-img-car.png"
+          alt="Междугороднее такси InterTaxi"
+          className="relative mx-auto h-[220px] object-contain z-10"
+        />
+      </div>
 
       {/* Заголовок по центру */}
       <section id="home" className="pt-[24px] scroll-mt-[80px]">
