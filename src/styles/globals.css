@@ -1,20 +1,128 @@
 @import "tailwindcss";
 
+@theme inline {
+  /* Core palette */
+  --color-background: var(--bg);
+  --color-bg-deep: var(--bg-deep);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-paper: var(--paper);
+  --color-paper-dim: var(--paper-dim);
+  --color-paper-ink: var(--paper-ink);
+  --color-paper-line: var(--paper-line);
+  --color-gold: var(--gold);
+  --color-gold-bright: var(--gold-bright);
+  --color-gold-deep: var(--gold-deep);
+  --color-gold-soft: var(--gold-soft);
+  --color-ink: var(--ink);
+  --color-ink-dim: var(--ink-dim);
+  --color-ink-mute: var(--ink-mute);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+
+  /* Legacy aliases (kept so older class names keep working) */
+  --color-primary: var(--surface);
+  --color-primary-hover: var(--surface-2);
+  --color-primary-foreground: var(--ink);
+  --color-accent: var(--gold);
+  --color-accent-hover: var(--gold-bright);
+  --color-accent-soft: var(--gold-soft);
+  --color-text-primary: var(--ink);
+  --color-text-secondary: var(--ink-dim);
+  --color-border: var(--line);
+
+  --font-sans: var(--font-golos), "Golos Text", "Segoe UI", sans-serif;
+  --font-display: var(--font-unbounded), "Unbounded", var(--font-golos), sans-serif;
+
+  --radius-control: 0.85rem;
+  --radius-card: 1.25rem;
+
+  --shadow-card: 0 18px 45px rgb(0 0 0 / 0.35);
+  --shadow-lift: 0 30px 80px rgb(0 0 0 / 0.55);
+  --shadow-gold: 0 12px 40px rgb(247 191 36 / 0.2);
+}
+
+:root {
+  color-scheme: dark;
+
+  /* Ночной рейс — асфальт и золото шашечек */
+  --bg: #0b0d0b;
+  --bg-deep: #060807;
+  --surface: #12150f;
+  --surface-2: #1a1e17;
+  --paper: #f3efe1;
+  --paper-dim: #e8e2cd;
+  --paper-ink: #191b12;
+  --paper-line: #d7d0b6;
+  --gold: #f7bf24;
+  --gold-bright: #ffd35a;
+  --gold-deep: #8f6a00;
+  --gold-soft: #2b230e;
+  --ink: #f0eee3;
+  --ink-dim: #a9a998;
+  --ink-mute: #73756a;
+  --line: #23271f;
+  --line-strong: #363b30;
+  --success: #56c584;
+  --danger: #ff6242;
+
+  --radius-control: 0.85rem;
+  --radius-card: 1.25rem;
+  --shadow-card: 0 18px 45px rgb(0 0 0 / 0.35);
+  --shadow-lift: 0 30px 80px rgb(0 0 0 / 0.55);
+}
+
+/* Аварийная тема — эвакуатор: золото уступает сигнальному оранжевому */
+.emergency-theme {
+  --gold: #ff7433;
+  --gold-bright: #ff9257;
+  --gold-deep: #b34a12;
+  --gold-soft: #331509;
+  --shadow-gold: 0 12px 40px rgb(255 116 51 / 0.22);
+}
+
+* {
+  box-sizing: border-box;
+}
+
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 64px;
+  scroll-padding-top: 84px;
+  background: var(--bg);
 }
 
 body {
   margin: 0;
-  @apply bg-white text-slate-900 antialiased;
+  min-width: 320px;
+  overflow-x: hidden;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-golos), "Golos Text", "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-@media (max-width: 768px) {
-  body {
-    max-width: 375px;
-    margin: 0 auto;
-  }
+body,
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  touch-action: manipulation;
 }
 
 img,
@@ -25,7 +133,325 @@ video {
   height: auto;
 }
 
+::selection {
+  background: var(--gold);
+  color: #14120a;
+}
+
 :focus-visible {
-  outline: 2px solid rgb(16 185 129);
-  outline-offset: 2px;
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.section-shell {
+  width: min(100% - 2rem, 74rem);
+  margin-inline: auto;
+}
+
+/* ——— Фирменные мотивы ————————————————————————————— */
+
+/* Шашечки такси — декоративная лента в 2 ряда */
+.checker-strip {
+  height: 12px;
+  background-image: conic-gradient(
+    var(--gold) 25%,
+    transparent 0 50%,
+    var(--gold) 0 75%,
+    transparent 0
+  );
+  background-size: 12px 12px;
+}
+
+/* Дорожная разметка — пунктирный разделитель */
+.road-divider {
+  height: 3px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--gold) 0 22px,
+    transparent 22px 42px
+  );
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+/* Точечный лидер в строках маршрутов (как в расписаниях) */
+.dotted-leader {
+  flex: 1 1 2rem;
+  min-width: 2rem;
+  align-self: flex-end;
+  border-bottom: 2px dotted var(--line-strong);
+  transform: translateY(-0.4em);
+  transition: border-color 0.2s ease;
+}
+
+.group:hover .dotted-leader,
+.group:focus-visible .dotted-leader {
+  border-color: var(--gold);
+}
+
+.ticket .dotted-leader {
+  border-color: color-mix(in srgb, var(--paper-ink) 30%, transparent);
+}
+
+/* Бумажный билет — светлая вставка на тёмном фоне */
+.ticket {
+  color-scheme: light;
+  background: linear-gradient(180deg, #f7f3e6 0%, var(--paper) 60%, #ece6d0 100%);
+  color: var(--paper-ink);
+}
+
+.ticket ::selection {
+  background: var(--paper-ink);
+  color: var(--paper);
+}
+
+/* Перфорация билета: полукруглые вырезы + пунктир */
+.ticket-perforation {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 0;
+}
+
+.ticket-perforation::before {
+  content: "";
+  flex: 1;
+  border-top: 2px dashed color-mix(in srgb, var(--paper-ink) 26%, transparent);
+  margin-inline: 1.4rem;
+}
+
+.ticket-notch {
+  position: absolute;
+  top: 50%;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--bg);
+  transform: translateY(-50%);
+}
+
+.ticket-notch--left {
+  left: -0.75rem;
+}
+
+.ticket-notch--right {
+  right: -0.75rem;
+}
+
+/* Зерно плёнки — атмосфера */
+.grain {
+  position: relative;
+}
+
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Свечение фар в hero */
+.hero-glow {
+  background:
+    radial-gradient(56rem 30rem at 12% -8%, rgb(247 191 36 / 0.13), transparent 60%),
+    radial-gradient(40rem 24rem at 96% 110%, rgb(247 191 36 / 0.07), transparent 65%),
+    var(--bg);
+}
+
+/* Тонкая сетка на тёмном (замена surface-grid) */
+.surface-grid {
+  background-image:
+    linear-gradient(rgb(240 238 227 / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(240 238 227 / 0.03) 1px, transparent 1px);
+  background-size: 34px 34px;
+}
+
+/* Бегущая строка направлений */
+.marquee {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 46s linear infinite;
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Появление hero при загрузке */
+.rise {
+  opacity: 0;
+  transform: translateY(18px);
+  animation: rise 0.75s cubic-bezier(0.22, 0.61, 0.2, 1) forwards;
+}
+
+.rise-2 { animation-delay: 0.08s; }
+.rise-3 { animation-delay: 0.16s; }
+.rise-4 { animation-delay: 0.24s; }
+.rise-5 { animation-delay: 0.34s; }
+.rise-6 { animation-delay: 0.44s; }
+
+@keyframes rise {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Плавное появление секций при скролле (прогрессивно) */
+@keyframes view-rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .view-rise {
+      animation: view-rise both ease;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+  }
+}
+
+/* ——— Всплывающие панели (Radix Popover / Select) ——————— */
+
+.pop-panel {
+  transform-origin: var(--radix-popover-content-transform-origin, top);
+  animation: pop-in 0.18s cubic-bezier(0.22, 0.61, 0.2, 1);
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+}
+
+/* Колонки выбора времени */
+.time-col {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+/* ——— Календарь (react-day-picker) в теме «Ночной рейс» ——— */
+
+.nr-cal.rdp-root,
+.nr-cal {
+  --rdp-accent-color: var(--gold);
+  --rdp-accent-background-color: var(--gold-soft);
+  --rdp-today-color: var(--gold);
+  --rdp-day-height: 2.5rem;
+  --rdp-day-width: 2.5rem;
+  --rdp-day_button-height: 2.35rem;
+  --rdp-day_button-width: 2.35rem;
+  --rdp-day_button-border-radius: 0.7rem;
+  --rdp-nav_button-height: 2.2rem;
+  --rdp-nav_button-width: 2.2rem;
+  --rdp-selected-border: none;
+  --rdp-outside-opacity: 0.35;
+  --rdp-disabled-opacity: 0.25;
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.nr-cal .rdp-month_caption {
+  font-family: var(--font-unbounded), "Unbounded", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: capitalize;
+  color: var(--ink);
+}
+
+.nr-cal .rdp-weekday {
+  color: var(--ink-mute);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.nr-cal .rdp-day_button {
+  font-weight: 600;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.nr-cal .rdp-selected .rdp-day_button {
+  background: var(--gold);
+  border: none;
+  color: #14120a;
+  font-weight: 800;
+}
+
+.nr-cal .rdp-today:not(.rdp-selected) .rdp-day_button {
+  color: var(--gold);
+}
+
+.nr-cal .rdp-chevron {
+  fill: var(--gold);
+}
+
+/* Пульс аварийных кнопок */
+.emergency-pulse {
+  animation: emergency-pulse 2.1s ease-in-out infinite;
+}
+
+@keyframes emergency-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(255 116 51 / 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgb(255 116 51 / 0);
+  }
+}
+
+@media (max-width: 767px) {
+  html {
+    scroll-padding-top: 72px;
+  }
+
+  body {
+    padding-bottom: 72px;
+  }
+
+  .section-shell {
+    width: min(100% - 1.25rem, 74rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .rise {
+    opacity: 1;
+    transform: none;
+  }
 }

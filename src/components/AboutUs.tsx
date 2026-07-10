@@ -1,47 +1,70 @@
-"use client";
-import React from "react";
-import ShareButton from "@/components/ShareButton";
+import { Clock3, MapPinned, ShieldCheck } from "lucide-react";
+import { SectionHeading } from "@/components/ui";
+import { siteConfig } from "@/lib/siteConfig";
 
-const AboutUs = () => {
+const trustPoints = [
+  {
+    value: "10+ лет",
+    label: "опыта за рулём",
+    icon: ShieldCheck,
+  },
+  {
+    value: "Днём и ночью",
+    label: "по предварительному заказу",
+    icon: Clock3,
+  },
+  {
+    value: "3 региона",
+    label: "Молдова, ПМР и Украина",
+    icon: MapPinned,
+  },
+];
+
+export default function AboutUs() {
   return (
-    <div id="about" className="px-6 pb-10 max-w-[375px] mx-auto">
-      <div>
-        <h2 className="pt-16 text-center text-black text-2xl font-black">
-          О нас
-        </h2>
-        <p className="mt-4 text-center text-gray-700 leading-relaxed">
-          <strong>InterTaxi</strong> — это междугороднее такси для удобных и
-          безопасных поездок по Приднестровью, Молдове и Украине. За рулём
-          водителя с опытом более 10 лет.
-        </p>
-        <p className="mt-4 text-center text-gray-700 leading-relaxed">
-          Мы ценим пунктуальность, чистоту и комфорт. Для нас важно, чтобы
-          каждая поездка проходила спокойно и с уважением к пассажиру.
-        </p>
-      </div>
+    <div className="py-14 sm:py-20">
+      <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+        <div>
+          <SectionHeading
+            index="03"
+            kicker="О нас"
+            title="Спокойная поездка начинается с доверия"
+            description={
+              <>
+                <strong className="text-ink">{siteConfig.name}</strong> —
+                междугородние поездки с вниманием к пунктуальности, чистоте
+                автомобиля и комфорту каждого пассажира.
+              </>
+            }
+          />
+        </div>
 
-      <div className="border-0 text-center w-full mt-10 mb-10 rounded-2xl p-6 bg-[#A9D3D9] flex flex-col gap-4 max-w-[320px] mx-auto shadow-sm">
-        <h2 className="text-black text-2xl font-black">Контакты</h2>
-        <p className="text-lg">Телефон</p>
-        <p className="text-lg font-semibold">
-          061019775
-          <br />
-          +373 (779) 51963
-        </p>
-        <a
-          href="tel:+37389056"
-          className="flex justify-center rounded-2xl bg-black text-white font-semibold w-full py-3 hover:bg-gray-800 transition"
-        >
-          Позвонить
-        </a>
-      </div>
-
-      <div className="text-center space-y-2 text-sm text-gray-600">
-        <ShareButton />
-        <p>© 2025 Такси Межгород — Все права защищены.</p>
+        <div className="view-rise grid gap-3">
+          {trustPoints.map(({ value, label, icon: Icon }) => (
+            <div
+              key={value}
+              className="group relative flex items-center gap-5 overflow-hidden rounded-2xl border border-line bg-surface p-5 transition-colors hover:border-gold/35"
+            >
+              <span
+                className="road-divider absolute inset-x-5 top-0 opacity-0 transition-opacity duration-300 group-hover:opacity-70"
+                style={{ height: 2 }}
+                aria-hidden="true"
+              />
+              <span className="grid size-12 shrink-0 place-items-center rounded-xl border border-gold/25 bg-gold-soft text-gold">
+                <Icon className="size-6" aria-hidden />
+              </span>
+              <div>
+                <p className="font-display text-lg font-semibold tracking-tight text-ink">
+                  {value}
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-ink-dim">
+                  {label}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
-};
-
-export default AboutUs;
+}

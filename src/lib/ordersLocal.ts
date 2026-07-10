@@ -11,13 +11,18 @@ export type ClientOrder = {
   date: string;
   time: string;
   roundTrip?: boolean;
+  returnTo?: string | null;
   returnDate?: string | null;
   returnTime?: string | null;
+  price?: string | null;
+  status?: "submitted" | "confirmed" | "completed" | "cancelled" | null;
 };
 
 const KEY = "myOrders";
 
 export function getOrders(): ClientOrder[] {
+  if (typeof window === "undefined") return [];
+
   try {
     const raw = localStorage.getItem(KEY);
     return raw ? (JSON.parse(raw) as ClientOrder[]) : [];
@@ -27,6 +32,8 @@ export function getOrders(): ClientOrder[] {
 }
 
 export function addOrder(o: ClientOrder) {
+  if (typeof window === "undefined") return;
+
   const list = getOrders();
   list.unshift(o); // новый — в начало
   const trimmed = list.slice(0, 10); // максимум 10
@@ -34,5 +41,6 @@ export function addOrder(o: ClientOrder) {
 }
 
 export function clearOrders() {
+  if (typeof window === "undefined") return;
   localStorage.removeItem(KEY);
 }
