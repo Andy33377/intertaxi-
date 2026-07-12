@@ -1,5 +1,5 @@
 import Link from "next/link";
-
+ 
 export default function AdminHeader() {
   return (
     <header className="fixed top-0 inset-x-0 bg-black text-white flex justify-between items-center h-[64px] w-full">
