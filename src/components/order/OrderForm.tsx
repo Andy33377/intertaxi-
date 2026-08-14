@@ -1,31 +1,66 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/router";
+import { AnimatePresence, motion } from "motion/react";
+import { Checkbox, PhoneField } from "@/components/ui";
+import {
+  Armchair,
+  ArrowRight,
+  CalendarDays,
+  Clock3,
+  MapPin,
+  Minus,
+  Plus,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 import { addOrder } from "@/lib/ordersLocal";
+import { findRouteByLabels } from "@/lib/cities";
+import { formatPrice, getCurrentCountry } from "@/lib/priceFormatter";
+import {
+  PHONE_COUNTRIES,
+  isValidNational,
+  phoneErrorMessage,
+  toE164,
+  type PhoneCountry,
+} from "@/lib/phone";
+
+type Trip = {
+  from?: string;
+  to?: string;
+  date?: string;
+  time?: string;
+  roundTrip?: boolean;
+  returnTo?: string | null;
+  returnDate?: string | null;
+  returnTime?: string | null;
+};
+
+const ticketLabelClass =
+  "block text-[0.68rem] font-bold uppercase tracking-[0.18em] text-paper-ink/60";
+
+const ticketFieldClass =
+  "mt-2 min-h-12 w-full rounded-xl border border-paper-line bg-white/75 px-4 text-base text-paper-ink shadow-[inset_0_1px_2px_rgb(25_27_18/0.06)] outline-none transition focus:border-gold-deep focus:bg-white";
 
 export default function OrderForm() {
-  type Trip = {
-    from?: string;
-    to?: string;
-    date?: string;
-    time?: string;
-    roundTrip?: boolean;
-    returnDate?: string | null;
-    returnTime?: string | null;
-  };
-
   const router = useRouter();
-
-  // 🔹 Состояние маршрута
   const [trip, setTrip] = useState<Trip>({});
   const [tripLoaded, setTripLoaded] = useState(false);
-  const [country, setCountry] = useState<"MD" | "PMR" | "RU">("MD");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [phoneCountry, setPhoneCountry] = useState<PhoneCountry>("MD");
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const phoneInputRef = useRef<HTMLInputElement>(null);
+  const [passengers, setPassengers] = useState(1);
+  const [childSeat, setChildSeat] = useState(false);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem("tripData");
-      setTrip(raw ? JSON.parse(raw) : {});
+      const raw = window.localStorage.getItem("tripData");
+      setTrip(raw ? (JSON.parse(raw) as Trip) : {});
     } catch {
       setTrip({});
     } finally {
@@ -33,302 +68,323 @@ export default function OrderForm() {
     }
   }, []);
 
-  // 🔹 Локальный state
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [passengers, setPassengers] = useState(1);
-  const [childSeat, setChildSeat] = useState(false);
-  const [comment, setComment] = useState("");
+  const quotedPrice = useMemo(() => {
+    if (!trip.from || !trip.to) return null;
+    const route = findRouteByLabels(trip.from, trip.to);
+    return route
+      ? formatPrice(`от ${route.price} лей`, getCurrentCountry())
+      : null;
+  }, [trip.from, trip.to]);
 
-  // Форматирование телефона по стране
-  function formatPhone(raw: string, c: "MD" | "PMR" | "RU") {
-    let digits = raw.replace(/\D/g, "");
-    if (!digits) return "";
-    // Убираем префикс 00
-    if (digits.startsWith("00")) digits = digits.slice(2);
-
-    if (c === "MD" || c === "PMR") {
-      if (digits.startsWith("373")) digits = digits.slice(3);
-      // Ожидаем 8 цифр
-      digits = digits.slice(0, 8);
-      const p1 = digits.slice(0, 2);
-      const p2 = digits.slice(2, 5);
-      const p3 = digits.slice(5, 8);
-      return `+373${p1 ? " " + p1 : ""}${p2 ? " " + p2 : ""}${
-        p3 ? " " + p3 : ""
-      }`.trim();
-    }
-
-    // RU: +7 (XXX) XXX-XX-XX
-    if (digits.startsWith("7")) digits = digits.slice(1);
-    if (digits.startsWith("8")) digits = digits.slice(1); // часто вводят 8XXXXXXXXXX
-    digits = digits.slice(0, 10);
-    const a = digits.slice(0, 3);
-    const b = digits.slice(3, 6);
-    const c4 = digits.slice(6, 8);
-    const d4 = digits.slice(8, 10);
-
-    let body = "";
-    if (a) body = ` (${a}`;
-    if (b) body += `) ${b}`;
-    if (c4) body += `-${c4}`;
-    if (d4) body += `-${d4}`;
-    return `+7${body}`.trim();
-  }
-
-  function normalizePhoneForApi(formatted: string) {
-    return formatted.replace(/[^+\d]/g, "");
-  }
-
-  // 🔹 Отправка заказа
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    // Мини-валидация телефона по выбранной стране
-    const normalized = normalizePhoneForApi(phone);
-    const valid =
-      (country === "MD" && /^\+373\d{8}$/.test(normalized)) ||
-      (country === "PMR" && /^\+373\d{8}$/.test(normalized)) ||
-      (country === "RU" && /^\+7\d{10}$/.test(normalized));
-
-    if (!valid) {
-      alert(
-        country === "RU"
-          ? "Введите телефон в формате +7 (XXX) XXX-XX-XX"
-          : "Введите телефон в формате +373 XX XXX XXX"
-      );
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!isValidNational(phone, phoneCountry)) {
+      setPhoneError(phoneErrorMessage(phoneCountry));
+      phoneInputRef.current?.focus();
       return;
     }
+    setPhoneError(null);
+
     const payload = {
       ...trip,
       name: name.trim(),
-      phone: normalizePhoneForApi(phone),
+      phone: toE164(phone, phoneCountry),
       passengers,
       childSeat,
       comment: comment.trim(),
     };
 
-    console.log("📤 Отправляем заказ:", payload);
-
+    setSubmitting(true);
     try {
-      const res = await fetch("/api/orders", {
+      const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error("❌ Ошибка при создании заказа:", errorText);
-        alert("Не удалось создать заказ: " + errorText);
+      if (!response.ok) {
+        const errorText = await response.text();
+        window.alert(`Не удалось создать заказ: ${errorText}`);
         return;
       }
 
-      const data = await res.json();
-      console.log("✅ Заказ успешно создан:", data);
+      const data = await response.json();
+      addOrder({
+        id: data.id,
+        createdAt: data.createdAt,
+        name: payload.name,
+        phone: payload.phone,
+        passengers: payload.passengers,
+        childSeat: payload.childSeat,
+        comment: payload.comment || null,
+        from: payload.from!,
+        to: payload.to!,
+        date: payload.date!,
+        time: payload.time!,
+        roundTrip: payload.roundTrip,
+        returnTo: payload.returnTo ?? payload.from ?? null,
+        returnDate: payload.returnDate ?? null,
+        returnTime: payload.returnTime ?? null,
+        price: quotedPrice ?? undefined,
+        status: "submitted",
+      });
 
-      // 🔹 Пишем заказ в историю (localStorage)
-      try {
-        addOrder({
-          id: data.id,
-          createdAt: data.createdAt,
-          name: payload.name,
-          phone: payload.phone,
-          passengers: payload.passengers,
-          childSeat: payload.childSeat,
-          comment: payload.comment || null,
-          from: payload.from!,
-          to: payload.to!,
-          date: payload.date!,
-          time: payload.time!,
-          roundTrip: payload.roundTrip,
-          returnDate: trip.returnDate ?? null,
-          returnTime: trip.returnTime ?? null,
-        });
-      } catch {
-        /* игнорируем ошибку локального сохранения */
-      }
-
-      // 🔹 Очищаем временные данные и переходим на страницу благодарности
-      localStorage.removeItem("tripData");
-      router.push("/thanks");
-    } catch (err) {
-      console.error("🚨 Ошибка сети или кода:", err);
-      alert("Не удалось отправить заказ 😞");
+      window.localStorage.removeItem("tripData");
+      await router.push("/thanks");
+    } catch {
+      window.alert("Не удалось отправить заказ. Проверьте соединение и попробуйте ещё раз.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  // 🔹 Пока грузим localStorage
   if (!tripLoaded) {
-    return <p className="text-center p-4">Загрузка...</p>;
+    return (
+      <div className="mx-auto h-[34rem] max-w-2xl animate-pulse rounded-card bg-surface shadow-card" />
+    );
   }
 
-  // 🔹 Если маршрута нет — вернуть на форму выбора
   if (!trip.from || !trip.to || !trip.date || !trip.time) {
     return (
-      <div className="max-w-md mx-auto p-4 text-center">
-        <p>Маршрут не заполнен. Пожалуйста, выберите его заново.</p>
+      <div className="mx-auto max-w-xl rounded-card border border-line bg-surface p-7 text-center shadow-card sm:p-10">
+        <span className="mx-auto grid size-14 place-items-center rounded-full border border-gold/30 bg-gold-soft text-gold">
+          <MapPin className="size-7" aria-hidden="true" />
+        </span>
+        <h1 className="mt-5 font-display text-xl font-semibold tracking-tight text-ink sm:text-2xl">
+          Сначала выберите маршрут
+        </h1>
+        <p className="mt-3 text-ink-dim">
+          Вернитесь к форме поездки — выбранные города и цена появятся здесь.
+        </p>
         <button
-          onClick={() => router.push("/#contacts")}
-          className="mt-3 rounded-2xl bg-black text-white px-4 py-2"
+          type="button"
+          onClick={() => router.push("/#booking")}
+          className="mt-6 min-h-12 rounded-xl bg-gold px-6 font-extrabold text-[#14120a] shadow-gold transition-colors hover:bg-gold-bright"
         >
-          К выбору маршрута
+          Выбрать маршрут
         </button>
       </div>
     );
   }
 
-  // 🔹 Основная форма
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-md mx-auto p-4">
-      <h2 className="text-xl font-bold text-center mb-4">
-        Подтверждение поездки
-      </h2>
+    <motion.form
+      initial={{ opacity: 0, y: 26 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.22, 0.61, 0.2, 1] }}
+      onSubmit={handleSubmit}
+      className="ticket relative mx-auto max-w-2xl rounded-card shadow-lift"
+    >
+      {/* Шапка билета — маршрут */}
+      <div className="relative overflow-hidden px-5 pb-6 pt-6 sm:px-7 sm:pt-7">
+        <span
+          className="absolute inset-x-0 top-0 opacity-[0.13]"
+          style={{
+            height: 8,
+            backgroundSize: "8px 8px",
+            backgroundImage:
+              "conic-gradient(#191b12 25%, transparent 0 50%, #191b12 0 75%, transparent 0)",
+          }}
+          aria-hidden="true"
+        />
+        <p className="font-display text-[0.62rem] font-semibold uppercase tracking-[0.3em] text-paper-ink/50">
+          Онлайн-заказ · шаг 2 из 2
+        </p>
+        <h1 className="mt-2 font-display text-xl font-semibold tracking-tight text-paper-ink sm:text-2xl">
+          Подтвердите поездку
+        </h1>
 
-      {/* Подтверждение маршрута */}
-      <div className="bg-gray-100 p-3 rounded-lg text-sm space-y-1">
-        <p>
-          <strong>Откуда:</strong> {trip.from || "—"}
-        </p>
-        <p>
-          <strong>Куда:</strong> {trip.to || "—"}
-        </p>
-        <p>
-          <strong>Дата:</strong> {trip.date || "—"}
-        </p>
-        <p>
-          <strong>Время:</strong> {trip.time || "—"}
-        </p>
+        <div className="mt-6 grid gap-3 rounded-2xl border border-paper-line bg-white/60 p-4 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+          <div>
+            <span className={ticketLabelClass}>Откуда</span>
+            <p className="mt-1 font-display text-base font-semibold tracking-tight text-paper-ink">
+              {trip.from}
+            </p>
+          </div>
+          <ArrowRight
+            className="hidden size-5 text-gold-deep sm:block"
+            aria-hidden="true"
+          />
+          <div className="sm:text-right">
+            <span className={ticketLabelClass}>Куда</span>
+            <p className="mt-1 font-display text-base font-semibold tracking-tight text-paper-ink">
+              {trip.to}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-paper-ink/70">
+          <span className="flex items-center gap-2">
+            <CalendarDays className="size-4 text-gold-deep" aria-hidden="true" />
+            {trip.date}
+          </span>
+          <span className="flex items-center gap-2">
+            <Clock3 className="size-4 text-gold-deep" aria-hidden="true" />
+            {trip.time}
+          </span>
+          {quotedPrice && (
+            <strong className="ml-auto font-display text-base font-semibold text-paper-ink">
+              {quotedPrice}
+            </strong>
+          )}
+        </div>
+
         {trip.roundTrip && (
-          <>
-            <p>
-              <strong>Обратная дата:</strong> {trip.returnDate || "—"}
-            </p>
-            <p>
-              <strong>Обратное время:</strong> {trip.returnTime || "—"}
-            </p>
-          </>
+          <div className="mt-4 rounded-xl border border-dashed border-gold-deep/50 bg-[#f3e7c0]/70 px-4 py-3 text-sm text-paper-ink">
+            <strong>Обратная поездка −50%:</strong>{" "}
+            {trip.returnDate || trip.date} в {trip.returnTime || "уточняется"}
+          </div>
         )}
       </div>
 
-      {/* Имя */}
-      <div>
-        <label className="block text-sm font-medium">Имя *</label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) =>
-            setName(e.target.value.replace(/[^A-Za-zА-Яа-яЁё\s]/g, ""))
-          }
-          className="mt-1 w-full rounded-2xl border p-3"
-          autoComplete="name"
-          required
-        />
+      {/* Перфорация */}
+      <div className="ticket-perforation" aria-hidden="true">
+        <span className="ticket-notch ticket-notch--left" />
+        <span className="ticket-notch ticket-notch--right" />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium">Телефон *</label>
-        <div className="mt-1 flex gap-2">
-          <select
-            className="w-36 rounded-2xl border p-3 bg-white"
-            value={country}
-            onChange={(e) => {
-              const c = e.target.value as "MD" | "PMR" | "RU";
-              setCountry(c);
-              setPhone((prev) => formatPhone(prev, c));
-            }}
-          >
-            <option value="MD">🇲🇩 +373 (Молдова)</option>
-            <option value="PMR">🇲🇩 +373 (ПМР)</option>
-            <option value="RU">🇷🇺 +7 (Россия)</option>
-          </select>
-          <input
-            type="tel"
-            inputMode="tel"
-            value={phone}
-            onChange={(e) => setPhone(formatPhone(e.target.value, country))}
-            className="flex-1 rounded-2xl border p-3"
-            placeholder={
-              country === "RU" ? "+7 (9XX) XXX-XX-XX" : "+373 XX XXX XXX"
-            }
-            autoComplete="tel"
-            maxLength={country === "RU" ? 18 : 16}
-            required
-          />
+      <div className="space-y-6 px-5 pb-6 pt-5 sm:px-7 sm:pb-7">
+        <div className="grid gap-5 sm:grid-cols-2">
+          <label className={ticketLabelClass}>
+            Ваше имя <span className="text-[#b3341f]">*</span>
+            <input
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              className={ticketFieldClass}
+              autoComplete="name"
+              placeholder="Как к вам обращаться"
+              required
+            />
+          </label>
+
+          <div>
+            <label htmlFor="order-phone" className={ticketLabelClass}>
+              Телефон <span className="text-[#b3341f]">*</span>
+            </label>
+            <PhoneField
+              id="order-phone"
+              className="mt-2"
+              tone="paper"
+              value={phone}
+              country={phoneCountry}
+              inputRef={phoneInputRef}
+              onValueChange={(next) => {
+                setPhone(next);
+                if (phoneError) setPhoneError(null);
+              }}
+              onCountryChange={(next) => {
+                setPhoneCountry(next);
+                setPhoneError(null);
+              }}
+              invalid={Boolean(phoneError)}
+              describedBy="order-phone-hint"
+              required
+            />
+            <p
+              id="order-phone-hint"
+              className={`mt-1.5 text-xs normal-case tracking-normal ${
+                phoneError ? "text-[#b3341f]" : "text-paper-ink/55"
+              }`}
+            >
+              {phoneError ??
+                `Код +${PHONE_COUNTRIES[phoneCountry].dialCode} — ${PHONE_COUNTRIES[phoneCountry].hint}`}
+            </p>
+          </div>
         </div>
-        <p className="mt-1 text-xs text-slate-500">
-          {country === "RU"
-            ? "Формат: +7 (XXX) XXX-XX-XX"
-            : "Формат: +373 XX XXX XXX"}
-        </p>
-      </div>
 
-      {/* Пассажиры */}
-      <div>
-        <label className="block text-sm font-medium">Пассажиры</label>
-        <div className="flex items-center gap-2 mt-2">
-          <button
-            type="button"
-            onClick={() => setPassengers((p) => Math.max(1, p - 1))}
-            className="px-3 py-2 rounded-2xl border"
-            aria-label="Уменьшить"
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div>
+            <span className={`flex items-center gap-2 ${ticketLabelClass}`}>
+              <Users className="size-4" aria-hidden="true" />
+              Пассажиры
+            </span>
+            <div className="mt-2 inline-grid grid-cols-[3rem_4rem_3rem] overflow-hidden rounded-xl border border-paper-line bg-white/75">
+              <button
+                type="button"
+                onClick={() => setPassengers((count) => Math.max(1, count - 1))}
+                className="grid min-h-12 place-items-center text-paper-ink transition hover:bg-paper-dim"
+                aria-label="Уменьшить количество пассажиров"
+              >
+                <Minus className="size-4" aria-hidden="true" />
+              </button>
+              <output className="relative grid min-h-12 place-items-center overflow-hidden border-x border-paper-line font-display text-base font-semibold text-paper-ink">
+                <AnimatePresence initial={false} mode="popLayout">
+                  <motion.span
+                    key={passengers}
+                    initial={{ y: 14, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -14, opacity: 0 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                  >
+                    {passengers}
+                  </motion.span>
+                </AnimatePresence>
+              </output>
+              <button
+                type="button"
+                onClick={() => setPassengers((count) => Math.min(6, count + 1))}
+                className="grid min-h-12 place-items-center text-paper-ink transition hover:bg-paper-dim"
+                aria-label="Увеличить количество пассажиров"
+              >
+                <Plus className="size-4" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+
+          <label
+            htmlFor="order-child-seat"
+            className={`flex min-h-20 cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors ${
+              childSeat
+                ? "border-gold-deep bg-[#f3e7c0]/70"
+                : "border-paper-line bg-white/60 hover:border-gold-deep/60"
+            }`}
           >
-            −
-          </button>
-          <input
-            type="number"
-            inputMode="numeric"
-            className="w-20 text-center rounded-2xl border p-3"
-            value={passengers}
-            min={1}
-            max={4}
-            step={1}
-            onChange={(e) => {
-              const n = parseInt(e.target.value.replace(/^0+/, "") || "0", 10);
-              if (Number.isNaN(n)) return;
-              setPassengers(Math.max(1, Math.min(4, n)));
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => setPassengers((p) => Math.min(4, p + 1))}
-            className="px-3 py-2 rounded-2xl border"
-            aria-label="Увеличить"
-          >
-            +
-          </button>
+            <Checkbox
+              id="order-child-seat"
+              tone="paper"
+              checked={childSeat}
+              onCheckedChange={setChildSeat}
+            />
+            <Armchair className="size-5 text-gold-deep" aria-hidden="true" />
+            <span>
+              <strong className="block text-sm text-paper-ink">
+                Детское кресло
+              </strong>
+              <span className="text-xs text-paper-ink/60">
+                Подготовим заранее
+              </span>
+            </span>
+          </label>
         </div>
+
+        <label className={`block ${ticketLabelClass}`}>
+          Комментарий
+          <textarea
+            value={comment}
+            onChange={(event) => setComment(event.target.value)}
+            className={`${ticketFieldClass} min-h-28 py-3`}
+            rows={3}
+            placeholder="Номер рейса, багаж или пожелания к поездке"
+          />
+        </label>
+
+        <div className="flex items-start gap-3 rounded-xl border border-paper-line bg-white/50 p-4 text-sm text-paper-ink/70">
+          <ShieldCheck
+            className="mt-0.5 size-5 shrink-0 text-[#2c7a4b]"
+            aria-hidden="true"
+          />
+          <p>Мы используем ваши контакты только для подтверждения этой поездки.</p>
+        </div>
+
+        <button
+          type="submit"
+          disabled={submitting}
+          className="flex min-h-14 w-full items-center justify-center gap-3 rounded-xl bg-paper-ink px-6 font-display text-sm font-semibold uppercase tracking-[0.18em] text-gold transition hover:bg-black disabled:cursor-wait disabled:opacity-70"
+        >
+          {submitting ? "Отправляем…" : "Подтвердить заказ"}
+        </button>
       </div>
-
-      {/* Детское кресло */}
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={childSeat}
-          onChange={(e) => setChildSeat(e.target.checked)}
-        />
-        Детское кресло
-      </label>
-
-      {/* Комментарий */}
-      <div>
-        <label className="block text-sm font-medium">Комментарий</label>
-        <textarea
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          className="mt-1 w-full rounded-2xl border p-3"
-          rows={3}
-          placeholder="Пожелания к поездке"
-        />
-      </div>
-
-      {/* Кнопка */}
-      <button
-        type="submit"
-        className="w-full h-14 rounded-2xl bg-black text-white text-lg font-semibold hover:bg-emerald-700"
-      >
-        Подтвердить заказ
-      </button>
-    </form>
+    </motion.form>
   );
 }

@@ -1,25 +1,39 @@
 "use client";
-import React, { useState } from "react";
 
-const cars = [
+import { useState } from "react";
+import Image from "next/image";
+import { AnimatePresence, motion } from "motion/react";
+import {
+  Baby,
+  ChevronLeft,
+  ChevronRight,
+  Fuel,
+  Luggage,
+  Snowflake,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
+import { Badge, Card, SectionHeading } from "@/components/ui";
+
+type Car = {
+  id: number;
+  image: string;
+  name: string;
+  description: string;
+  seats: number;
+  fuel: string;
+  childSeat: boolean;
+  ac: boolean;
+  largeLuggage: boolean;
+};
+
+const cars: Car[] = [
   {
     id: 1,
-    image: "/car0.png",
-    name: "Volkswagen Golf",
-    description:
-      "Компактный и экономичный хэтчбек для городских и междугородних поездок. Удобный салон и комфортная подвеска.",
-    seats: 5,
-    fuel: "Дизель",
-    childSeat: true,
-    ac: true,
-    largeLuggage: false,
-  },
-  {
-    id: 2,
     image: "/car1.png",
     name: "Volkswagen Touran",
     description:
-      "Компактный минивэн для семейных поездок. Удобный салон, экономичный расход, отличный выбор для междугородних маршрутов.",
+      "Удобный минивэн для семьи или небольшой компании с комфортным салоном.",
     seats: 6,
     fuel: "Дизель",
     childSeat: true,
@@ -27,11 +41,11 @@ const cars = [
     largeLuggage: false,
   },
   {
-    id: 3,
+    id: 2,
     image: "/car2.png",
     name: "Volkswagen Transporter T4",
     description:
-      "Просторный фургон для комфортных поездок. Большой багажник, удобные кресла, идеален для групп и перевозки багажа.",
+      "Просторный автомобиль для групповых поездок и маршрутов с большим багажом.",
     seats: 6,
     fuel: "Дизель",
     childSeat: true,
@@ -40,159 +54,171 @@ const cars = [
   },
 ];
 
-const AutoPark = () => {
+type Spec = {
+  label: string;
+  icon: LucideIcon;
+};
+
+export default function AutoPark() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [slideDirection, setSlideDirection] = useState<-1 | 1>(1);
+  const car = cars[currentIndex];
 
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % cars.length);
+  const move = (direction: -1 | 1) => {
+    setSlideDirection(direction);
+    setCurrentIndex(
+      (current) => (current + direction + cars.length) % cars.length,
+    );
   };
 
-  const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + cars.length) % cars.length);
-  };
-
-  const goToSlide = (index: number) => {
+  const jumpTo = (index: number) => {
+    if (index === currentIndex) return;
+    setSlideDirection(index > currentIndex ? 1 : -1);
     setCurrentIndex(index);
   };
 
+  const specs: Spec[] = [
+    { label: `${car.seats} мест`, icon: Users },
+    { label: car.fuel, icon: Fuel },
+    ...(car.ac ? [{ label: "Кондиционер", icon: Snowflake }] : []),
+    ...(car.childSeat ? [{ label: "Детское кресло", icon: Baby }] : []),
+    ...(car.largeLuggage ? [{ label: "Большой багаж", icon: Luggage }] : []),
+  ];
+
   return (
-    <div id="autopark" className="pb-10">
-      <h2 className="pt-16 text-center text-black text-2xl font-black mb-8">
-        Наш автопарк
-      </h2>
+    <div className="py-14 sm:py-20">
+      <SectionHeading
+        index="02"
+        kicker="Комфорт в пути"
+        title="Наш автопарк"
+        description="Подберём автомобиль под количество пассажиров, багаж и особенности поездки."
+      />
 
-      <div className="max-w-2xl mx-auto">
-        {/* Карусель */}
-        <div className="relative">
-          {/* Основное изображение - закругления только сверху */}
-          <div className="relative w-full   md:h-96 rounded-t-2xl overflow-hidden bg-gray-100 shadow-lg">
-            <img
-              src={cars[currentIndex].image}
-              alt={cars[currentIndex].name}
-              className="w-full h-full object-cover"
-            />
-
-            {/* Кнопки навигации */}
-            <button
-              onClick={prevSlide}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-2 hover:bg-black/70 transition"
-              aria-label="Предыдущее фото"
+      <Card className="view-rise mt-8 overflow-hidden p-0 lg:grid lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="relative aspect-[4/3] overflow-hidden bg-[#0d0f0c] sm:aspect-[16/10] lg:aspect-auto lg:min-h-[26rem]">
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(60% 55% at 50% 62%, rgb(247 191 36 / 0.12), transparent 70%)",
+            }}
+            aria-hidden="true"
+          />
+          <AnimatePresence
+            initial={false}
+            custom={slideDirection}
+            mode="popLayout"
+          >
+            <motion.div
+              key={car.image}
+              custom={slideDirection}
+              initial={{ opacity: 0, x: slideDirection * 60, scale: 1.02 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: slideDirection * -60, scale: 0.99 }}
+              transition={{ duration: 0.4, ease: [0.22, 0.61, 0.2, 1] }}
+              className="absolute inset-0"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="m15 18-6-6 6-6" />
-              </svg>
+              <Image
+                src={car.image}
+                alt={`${car.name} — автомобиль ${currentIndex + 1} из ${cars.length}`}
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover"
+              />
+            </motion.div>
+          </AnimatePresence>
+          <div
+            className="absolute inset-0 bg-gradient-to-t from-[#0d0f0c]/70 via-transparent to-transparent"
+            aria-hidden="true"
+          />
+
+          <div className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-between px-2 sm:px-4">
+            <button
+              type="button"
+              aria-label="Показать предыдущий автомобиль"
+              onClick={() => move(-1)}
+              className="grid size-11 place-items-center rounded-full border border-line-strong bg-black/50 text-ink backdrop-blur transition hover:border-gold hover:text-gold"
+            >
+              <ChevronLeft className="size-6" aria-hidden />
             </button>
-
             <button
-              onClick={nextSlide}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-2 hover:bg-black/70 transition"
-              aria-label="Следующее фото"
+              type="button"
+              aria-label="Показать следующий автомобиль"
+              onClick={() => move(1)}
+              className="grid size-11 place-items-center rounded-full border border-line-strong bg-black/50 text-ink backdrop-blur transition hover:border-gold hover:text-gold"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="m9 18 6-6-6-6" />
-              </svg>
+              <ChevronRight className="size-6" aria-hidden />
             </button>
           </div>
 
-          {/* Карточка с информацией - закругления только снизу, "наезжает" на фото */}
-          <div className="bg-white rounded-b-2xl border-t-0 border-x border-b border-gray-200 p-4 shadow-sm -mt-2 relative z-10">
-            {/* Название слева, цена справа */}
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg md:text-xl font-bold text-black">
-                {cars[currentIndex].name}
+          <span className="absolute bottom-3 right-3 rounded-full border border-line-strong bg-black/60 px-3 py-1 font-display text-[0.66rem] font-semibold tracking-[0.2em] text-gold backdrop-blur">
+            {currentIndex + 1} / {cars.length}
+          </span>
+        </div>
+
+        <div
+          className="flex flex-col justify-center p-5 sm:p-7 lg:p-9"
+          aria-live="polite"
+        >
+          <AnimatePresence initial={false} mode="wait">
+            <motion.div
+              key={car.id}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            >
+              <p className="font-display text-[0.62rem] font-semibold uppercase tracking-[0.3em] text-ink-mute">
+                Борт №{car.id}
+              </p>
+              <h3 className="mt-3 font-display text-xl font-semibold tracking-tight text-ink sm:text-2xl">
+                {car.name}
               </h3>
-            </div>
+              <p className="mt-3 leading-relaxed text-ink-dim">
+                {car.description}
+              </p>
 
-            {/* Характеристики в ряд с иконками */}
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-700">
-              <span className="flex items-center gap-1.5">
-                <img
-                  src="/directions_car_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg"
-                  alt=""
-                  className="w-5 h-5 brightness-0"
-                />
-                <span>{cars[currentIndex].seats}</span>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <img
-                  src="/local_gas_station_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg"
-                  alt=""
-                  className="w-5 h-5 brightness-0"
-                />
-                <span>{cars[currentIndex].fuel}</span>
-              </span>
-              {cars[currentIndex].childSeat && (
-                <span className="flex items-center gap-1.5">
-                  <img
-                    src="/child_care_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg"
-                    alt=""
-                    className="w-5 h-5 brightness-0"
-                  />
-                  <span>Детское кресло</span>
-                </span>
-              )}
-              {cars[currentIndex].ac && (
-                <span className="flex items-center gap-1.5">
-                  <img
-                    src="/ac_unit_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg"
-                    alt=""
-                    className="w-5 h-5 brightness-0"
-                  />
-                  <span>Кондиционер</span>
-                </span>
-              )}
-              {cars[currentIndex].largeLuggage && (
-                <span className="flex items-center gap-1.5">
-                  <img
-                    src="/checked_bag_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg"
-                    alt=""
-                    className="w-5 h-5 brightness-0"
-                  />
-                  <span>большой багаж</span>
-                </span>
-              )}
-            </div>
+              <div className="mt-6 flex flex-wrap gap-2">
+                {specs.map(({ label, icon: Icon }) => (
+                  <Badge
+                    key={label}
+                    variant="default"
+                    className="gap-1.5 py-2 normal-case tracking-normal"
+                  >
+                    <Icon className="size-4 text-gold" aria-hidden />
+                    {label}
+                  </Badge>
+                ))}
+              </div>
+            </motion.div>
+          </AnimatePresence>
 
-            {/* Индикаторы (точки) */}
-            <div className="flex justify-center gap-2 mt-4 mb-4">
-              {cars.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => goToSlide(index)}
-                  className={`w-2 h-2 rounded-full transition ${
+          <div
+            className="mt-7 flex justify-center lg:justify-start"
+            aria-label="Выбор автомобиля"
+          >
+            {cars.map((option, index) => (
+              <button
+                key={option.id}
+                type="button"
+                aria-label={`Показать ${option.name}`}
+                aria-current={index === currentIndex ? "true" : undefined}
+                onClick={() => jumpTo(index)}
+                className="grid size-11 place-items-center rounded-full hover:bg-surface-2"
+              >
+                <span
+                  className={`block h-2 rounded-full transition-all ${
                     index === currentIndex
-                      ? "bg-black w-8"
-                      : "bg-gray-300 hover:bg-gray-400"
+                      ? "w-8 bg-gold"
+                      : "w-2 bg-line-strong"
                   }`}
-                  aria-label={`Перейти к фото ${index + 1}`}
+                  aria-hidden
                 />
-              ))}
-            </div>
+              </button>
+            ))}
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
-};
-
-export default AutoPark;
+}

@@ -1,65 +1,63 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { evacuatorRoutes } from "@/lib/evacuatorRoutes";
-import { formatPrice, getCurrentCountry } from "@/lib/priceFormatter";
 
-const EvacuatorPriceList = () => {
-  const [country, setCountry] = useState<"MD" | "PMR" | "UA">("PMR"); // По умолчанию PMR
+import { useEffect, useState } from "react";
+import { PriceRow } from "@/components/ui";
+import {
+  COUNTRY_CHANGE_EVENT,
+  type Country,
+  getCurrentCountry,
+} from "@/lib/country";
+import { evacuatorRoutes } from "@/lib/evacuatorRoutes";
+import { formatPrice } from "@/lib/priceFormatter";
+
+export default function EvacuatorPriceList() {
+  const [country, setCountry] = useState<Country>("PMR");
 
   useEffect(() => {
-    setCountry(getCurrentCountry());
-    const handleStorageChange = () => {
-      setCountry(getCurrentCountry());
-    };
-    window.addEventListener("storage", handleStorageChange);
-    const interval = setInterval(handleStorageChange, 500);
+    const updateCountry = () => setCountry(getCurrentCountry());
+
+    updateCountry();
+    window.addEventListener("storage", updateCountry);
+    window.addEventListener(COUNTRY_CHANGE_EVENT, updateCountry);
+
     return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      clearInterval(interval);
+      window.removeEventListener("storage", updateCountry);
+      window.removeEventListener(COUNTRY_CHANGE_EVENT, updateCountry);
     };
   }, []);
 
   return (
-    <div className="mt-8">
-      <h3 className="text-xl font-semibold mb-4 text-center">
+    <section aria-labelledby="evacuator-tariffs-title">
+      <h2
+        id="evacuator-tariffs-title"
+        className="mb-5 text-center font-display text-xl font-semibold tracking-tight text-ink sm:text-2xl"
+      >
         Тарифы эвакуатора
-      </h3>
+      </h2>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <table className="w-full border-collapse">
-          <tbody>
-            {evacuatorRoutes.map((route, index) => (
-              <tr
-                key={index}
-                className={`border-b border-gray-200 ${
-                  index === evacuatorRoutes.length - 1 ? "" : ""
-                }`}
-              >
-                <td className="px-4 py-3 text-gray-700">
-                  {route.from === route.to ? (
-                    <span className="font-medium">{route.from}</span>
-                  ) : (
-                    <span>
-                      {route.from} → {route.to}
-                    </span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-right font-semibold text-black">
-                  {formatPrice(route.price, country)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
+        <div>
+          {evacuatorRoutes.map((route) => {
+            const label =
+              route.from === route.to
+                ? route.from
+                : `${route.from} → ${route.to}`;
 
-        <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
-          <p className="text-xs text-gray-600 text-center">
-            * Цена в Кишинёве варьируется в зависимости от района
-          </p>
+            return (
+              <PriceRow
+                key={`${route.from}-${route.to}`}
+                label={label}
+                price={formatPrice(route.price, country)}
+              />
+            );
+          })}
         </div>
       </div>
-    </div>
-  );
-};
 
-export default EvacuatorPriceList;
+      <p className="mt-3 text-center text-xs leading-5 text-ink-mute">
+        Цена поездки по Кишинёву зависит от района. Точную стоимость сообщит
+        оператор.
+      </p>
+    </section>
+  );
+}

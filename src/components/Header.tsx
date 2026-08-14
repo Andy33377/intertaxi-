@@ -1,192 +1,252 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { ChevronDown, Menu, Phone, X } from "lucide-react";
+import {
+  COUNTRY_CHANGE_EVENT,
+  Country,
+  countryMeta,
+  getCurrentCountry,
+  setCurrentCountry,
+} from "@/lib/country";
+import { siteConfig } from "@/lib/siteConfig";
 
-type NavItem = { label: string; target?: string; href?: string };
-
-const items: NavItem[] = [
-  { label: "Главная", href: "/#home" },
+const navItems = [
   { label: "Маршруты", href: "/#routes" },
-  { label: "О компании", href: "/#about" },
-  { label: "Контакты", href: "/#contacts" },
+  { label: "Почему мы", href: "/#benefits" },
   { label: "Автопарк", href: "/#autopark" },
-  { label: "Эвакуаторы", href: "/evacuators" },
+  { label: "Контакты", href: "/#contacts" },
+  { label: "Эвакуатор", href: "/evacuators", emergency: true },
   { label: "Мои заказы", href: "/my-orders" },
 ];
 
-type Country = "MD" | "PMR" | "UA"; // Исправлено: UK → UA
+export default function Header() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [activeCountry, setActiveCountry] = useState<Country>("PMR");
+  const countryRef = useRef<HTMLDivElement>(null);
 
-const countryMeta: Record<Country, { label: string; flag: string }> = {
-  MD: { label: "MD", flag: "🇲🇩" },
-  PMR: { label: "PMR", flag: "🇲🇩" },
-  UA: { label: "UA", flag: "🇺🇦" }, // Исправлено: UK → UA
-};
-
-const Header = () => {
-  const [open, setOpen] = useState(false);
-  const [country, setCountry] = useState<Country>("PMR"); // По умолчанию PMR
-  const [countryModalOpen, setCountryModalOpen] = useState(false);
-
-  // Читаем страну из localStorage при загрузке
   useEffect(() => {
-    const saved = window.localStorage.getItem("country") as Country | null;
-    if (saved === "MD" || saved === "PMR" || saved === "UA") {
-      setCountry(saved);
-    } else {
-      // Если нет сохранённой, устанавливаем PMR и сохраняем
-      setCountry("PMR");
-      window.localStorage.setItem("country", "PMR");
-    }
+    setActiveCountry(getCurrentCountry());
+    const updateCountry = () => setActiveCountry(getCurrentCountry());
+    window.addEventListener(COUNTRY_CHANGE_EVENT, updateCountry);
+    window.addEventListener("storage", updateCountry);
+    return () => {
+      window.removeEventListener(COUNTRY_CHANGE_EVENT, updateCountry);
+      window.removeEventListener("storage", updateCountry);
+    };
   }, []);
 
   useEffect(() => {
-    const onEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setOpen(false);
-        setCountryModalOpen(false);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        setCountryOpen(false);
       }
     };
-    window.addEventListener("keydown", onEsc);
-    return () => window.removeEventListener("keydown", onEsc);
+    const onPointerDown = (event: PointerEvent) => {
+      if (
+        countryRef.current &&
+        !countryRef.current.contains(event.target as Node)
+      ) {
+        setCountryOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("pointerdown", onPointerDown);
+    };
   }, []);
+
+  const chooseCountry = (country: Country) => {
+    setCurrentCountry(country);
+    setActiveCountry(country);
+    setCountryOpen(false);
+  };
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 bg-black text-white h-[64px] w-full z-50">
-        <div className="flex items-center justify-between w-full h-full px-4">
-          <h2 className="font-bold text-lg">InterTaxi</h2>
+      <header className="fixed inset-x-0 top-0 z-50 h-16 border-b border-line bg-[rgb(9_11_9/0.86)] text-ink backdrop-blur-xl">
+        <div className="mx-auto flex h-full w-full max-w-7xl items-center justify-between px-4 sm:px-6">
+          <Link
+            href="/#home"
+            className="flex min-h-11 items-center gap-3 rounded-lg"
+            aria-label={`${siteConfig.name}, на главную`}
+          >
+            <span className="relative grid size-9 place-items-center overflow-hidden rounded-lg bg-gold font-display text-xs font-bold text-[#14120a]">
+              <span
+                className="checker-strip absolute inset-x-0 top-0 opacity-20"
+                style={{ height: 6, backgroundSize: "6px 6px" }}
+                aria-hidden="true"
+              />
+              IT
+            </span>
+            <span className="leading-none">
+              <span className="block font-display text-sm font-semibold tracking-[0.08em]">
+                {siteConfig.name.toUpperCase()}
+              </span>
+              <span className="mt-1 hidden text-[0.62rem] font-semibold uppercase tracking-[0.24em] text-ink-mute sm:block">
+                Междугороднее такси
+              </span>
+            </span>
+          </Link>
 
-          <div className="flex items-center gap-2">
-            {/* Кнопка выбора страны */}
+          <nav className="hidden items-center gap-1 lg:flex" aria-label="Основная навигация">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold transition-colors hover:bg-surface-2 ${
+                  item.emergency
+                    ? "text-[#ff9257] hover:text-[#ffab7d]"
+                    : "text-ink-dim hover:text-ink"
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <div ref={countryRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setCountryOpen((value) => !value)}
+                className="flex min-h-11 items-center gap-1.5 rounded-lg border border-line-strong bg-surface px-3 text-sm font-bold transition-colors hover:border-gold/40 hover:bg-surface-2"
+                aria-expanded={countryOpen}
+                aria-haspopup="menu"
+                aria-label="Выбрать регион и валюту"
+              >
+                <span aria-hidden="true">{countryMeta[activeCountry].flag}</span>
+                <span>{countryMeta[activeCountry].label}</span>
+                <ChevronDown className="size-4 text-ink-mute" aria-hidden="true" />
+              </button>
+
+              <AnimatePresence>
+                {countryOpen && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96, y: -6 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.97, y: -4 }}
+                  transition={{ duration: 0.16, ease: "easeOut" }}
+                  role="menu"
+                  aria-label="Регион и валюта"
+                  className="absolute right-0 top-[calc(100%+0.5rem)] w-64 origin-top-right rounded-2xl border border-line-strong bg-surface p-2 text-ink shadow-lift"
+                >
+                  {(Object.keys(countryMeta) as Country[]).map((country) => (
+                    <button
+                      key={country}
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={activeCountry === country}
+                      onClick={() => chooseCountry(country)}
+                      className={`flex min-h-11 w-full items-center justify-between rounded-xl px-3 text-left text-sm transition-colors hover:bg-surface-2 ${
+                        activeCountry === country
+                          ? "bg-gold-soft font-bold text-gold"
+                          : ""
+                      }`}
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <span aria-hidden="true">{countryMeta[country].flag}</span>
+                        <span>{countryMeta[country].name}</span>
+                      </span>
+                      <span className="text-xs text-ink-mute">
+                        {countryMeta[country].currency}
+                      </span>
+                    </button>
+                  ))}
+                </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <Link
+              href="/#booking"
+              className="hidden min-h-11 items-center rounded-lg bg-gold px-4 text-sm font-extrabold text-[#14120a] shadow-gold transition-colors hover:bg-gold-bright sm:flex"
+            >
+              Заказать
+            </Link>
+
             <button
               type="button"
-              onClick={() => setCountryModalOpen(true)}
-              className="flex items-center gap-1 px-3 py-1 rounded-full bg-white text-black text-sm"
+              onClick={() => setMenuOpen((value) => !value)}
+              className="grid size-11 place-items-center rounded-lg transition-colors hover:bg-surface-2 lg:hidden"
+              aria-label={menuOpen ? "Закрыть меню" : "Открыть меню"}
+              aria-expanded={menuOpen}
+              aria-controls="mobile-navigation"
             >
-              <span>{countryMeta[country].flag}</span>
-              <span>{countryMeta[country].label}</span>
-            </button>
-
-            {/* Бургер-меню */}
-            <button
-              onClick={() => setOpen((v) => !v)}
-              className="p-2 -mr-2"
-              aria-label="Открыть меню"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M4 8h16" />
-                <path d="M4 16h16" />
-              </svg>
+              {menuOpen ? (
+                <X className="size-6" aria-hidden="true" />
+              ) : (
+                <Menu className="size-6" aria-hidden="true" />
+              )}
             </button>
           </div>
         </div>
       </header>
 
-      {/* 🔹 Бекдроп под меню */}
-      {open && (
-        <div
-          onClick={() => setOpen(false)}
-          className="fixed inset-0 top-[64px] bg-black/30 z-40"
-        />
-      )}
-
-      {/* 🔹 Само меню */}
-      <nav
-        onClick={(e) => e.stopPropagation()}
-        className={`fixed top-[64px] left-0 right-0 bg-white text-slate-900 shadow-lg transition-opacity duration-150 z-50 ${
-          open ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-      >
-        <ul className="py-2">
-          {items.map((it) => (
-            <li key={it.label}>
-              <a
-                href={it.href ?? `#${it.target}`}
-                onClick={() => setOpen(false)}
-                className={`block w-full px-4 py-3 hover:bg-slate-100 active:bg-slate-200 ${
-                  it.label === "Эвакуаторы" ? "font-bold" : ""
-                }`}
-                rel={
-                  it.href?.startsWith("http")
-                    ? "noopener noreferrer"
-                    : undefined
-                }
-              >
-                {it.label}
-              </a>
-            </li>
-          ))}
-
-          <li className="px-4 pb-3">
-            <a
-              href="#contacts"
-              onClick={() => setOpen(false)}
-              className="block w-full rounded-full bg-emerald-600 text-white font-semibold px-4 py-3 hover:bg-emerald-700 text-center"
-            >
-              Запланировать поездку
-            </a>
-          </li>
-        </ul>
-      </nav>
-
-      {/* 🔹 Модалка выбора страны */}
-      {countryModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl p-4 w-[280px] space-y-3">
-            <h2 className="text-lg font-semibold text-center">
-              Выберите страну
-            </h2>
-            <div className="space-y-2">
-              {(["MD", "PMR", "UA"] as Country[]).map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => {
-                    setCountry(c);
-                    window.localStorage.setItem("country", c); // Сохраняем в localStorage
-                    setCountryModalOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl border ${
-                    country === c
-                      ? "bg-emerald-50 border-emerald-500"
-                      : "bg-white"
+      <AnimatePresence>
+      {menuOpen && (
+        <>
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            type="button"
+            className="fixed inset-0 top-16 z-40 cursor-default bg-black/60"
+            onClick={() => setMenuOpen(false)}
+            aria-label="Закрыть меню"
+          />
+          <motion.nav
+            initial={{ opacity: 0, y: -14 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.22, ease: [0.22, 0.61, 0.2, 1] }}
+            id="mobile-navigation"
+            aria-label="Мобильная навигация"
+            className="fixed inset-x-0 top-16 z-50 max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-line-strong bg-surface px-4 py-4 text-ink shadow-lift lg:hidden"
+          >
+            <div className="mx-auto grid max-w-2xl gap-1">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMenuOpen(false)}
+                  className={`flex min-h-12 items-center rounded-xl px-3 font-semibold transition-colors hover:bg-surface-2 ${
+                    item.emergency ? "text-[#ff9257]" : ""
                   }`}
                 >
-                  <span className="flex items-center gap-2">
-                    <span>{countryMeta[c].flag}</span>
-                    <span className="font-medium">{countryMeta[c].label}</span>
-                  </span>
-                  {country === c && (
-                    <span className="text-xs text-emerald-600">Выбрано</span>
-                  )}
-                </button>
+                  {item.label}
+                </Link>
               ))}
+              <div className="mt-2 grid grid-cols-2 gap-2 border-t border-line pt-4">
+                <a
+                  href={siteConfig.phone.href}
+                  className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-line-strong font-bold"
+                >
+                  <Phone className="size-4" aria-hidden="true" />
+                  Позвонить
+                </a>
+                <Link
+                  href="/#booking"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex min-h-12 items-center justify-center rounded-xl bg-gold font-extrabold text-[#14120a]"
+                >
+                  Заказать
+                </Link>
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setCountryModalOpen(false)}
-              className="w-full mt-1 rounded-xl border px-3 py-2 text-sm"
-            >
-              Закрыть
-            </button>
-          </div>
-        </div>
+          </motion.nav>
+        </>
       )}
+      </AnimatePresence>
 
-      {/* Контент с отступом под фиксированный header */}
-      <main className="pt-[64px]">{/* Весь контент страницы */}</main>
+      <div className="h-16" aria-hidden="true" />
     </>
   );
-};
-
-export default Header;
+}
