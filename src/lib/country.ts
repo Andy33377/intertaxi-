@@ -24,7 +24,7 @@ export const countryMeta: Record<Country, CountryMeta> = {
     label: "UA",
     flag: "🇺🇦",
     name: "Украина",
-    currency: "лей",
+    currency: "грн",
   },
 };
 
