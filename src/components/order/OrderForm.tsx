@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { AnimatePresence, motion } from "motion/react";
-import { Checkbox, Select } from "@/components/ui";
+import { Checkbox, PhoneField } from "@/components/ui";
 import {
   Armchair,
   ArrowRight,
@@ -18,6 +18,13 @@ import {
 import { addOrder } from "@/lib/ordersLocal";
 import { findRouteByLabels } from "@/lib/cities";
 import { formatPrice, getCurrentCountry } from "@/lib/priceFormatter";
+import {
+  PHONE_COUNTRIES,
+  isValidNational,
+  phoneErrorMessage,
+  toE164,
+  type PhoneCountry,
+} from "@/lib/phone";
 
 type Trip = {
   from?: string;
@@ -29,39 +36,6 @@ type Trip = {
   returnDate?: string | null;
   returnTime?: string | null;
 };
-
-type PhoneCountry = "MD" | "PMR" | "RU";
-
-function formatPhone(raw: string, country: PhoneCountry) {
-  let digits = raw.replace(/\D/g, "");
-  if (!digits) return "";
-  if (digits.startsWith("00")) digits = digits.slice(2);
-
-  if (country === "MD" || country === "PMR") {
-    if (digits.startsWith("373")) digits = digits.slice(3);
-    digits = digits.slice(0, 8);
-    const p1 = digits.slice(0, 2);
-    const p2 = digits.slice(2, 5);
-    const p3 = digits.slice(5, 8);
-    return `+373${p1 ? ` ${p1}` : ""}${p2 ? ` ${p2}` : ""}${
-      p3 ? ` ${p3}` : ""
-    }`.trim();
-  }
-
-  if (digits.startsWith("7") || digits.startsWith("8")) digits = digits.slice(1);
-  digits = digits.slice(0, 10);
-  const a = digits.slice(0, 3);
-  const b = digits.slice(3, 6);
-  const c = digits.slice(6, 8);
-  const d = digits.slice(8, 10);
-  return `+7${a ? ` (${a}` : ""}${b ? `) ${b}` : ""}${
-    c ? `-${c}` : ""
-  }${d ? `-${d}` : ""}`.trim();
-}
-
-function normalizePhone(formatted: string) {
-  return formatted.replace(/[^+\d]/g, "");
-}
 
 const ticketLabelClass =
   "block text-[0.68rem] font-bold uppercase tracking-[0.18em] text-paper-ink/60";
@@ -76,6 +50,8 @@ export default function OrderForm() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [phoneCountry, setPhoneCountry] = useState<PhoneCountry>("MD");
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const phoneInputRef = useRef<HTMLInputElement>(null);
   const [passengers, setPassengers] = useState(1);
   const [childSeat, setChildSeat] = useState(false);
   const [comment, setComment] = useState("");
@@ -102,25 +78,17 @@ export default function OrderForm() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const normalized = normalizePhone(phone);
-    const valid =
-      ((phoneCountry === "MD" || phoneCountry === "PMR") &&
-        /^\+373\d{8}$/.test(normalized)) ||
-      (phoneCountry === "RU" && /^\+7\d{10}$/.test(normalized));
-
-    if (!valid) {
-      window.alert(
-        phoneCountry === "RU"
-          ? "Введите телефон в формате +7 (XXX) XXX-XX-XX"
-          : "Введите телефон в формате +373 XX XXX XXX",
-      );
+    if (!isValidNational(phone, phoneCountry)) {
+      setPhoneError(phoneErrorMessage(phoneCountry));
+      phoneInputRef.current?.focus();
       return;
     }
+    setPhoneError(null);
 
     const payload = {
       ...trip,
       name: name.trim(),
-      phone: normalized,
+      phone: toE164(phone, phoneCountry),
       passengers,
       childSeat,
       comment: comment.trim(),
@@ -290,38 +258,39 @@ export default function OrderForm() {
             />
           </label>
 
-          <label className={ticketLabelClass}>
-            Телефон <span className="text-[#b3341f]">*</span>
-            <div className="mt-2 grid grid-cols-[7.75rem_1fr] gap-2">
-              <Select
-                tone="paper"
-                aria-label="Код страны"
-                value={phoneCountry}
-                onValueChange={(next) => {
-                  const nextCountry = next as PhoneCountry;
-                  setPhoneCountry(nextCountry);
-                  setPhone((current) => formatPhone(current, nextCountry));
-                }}
-                options={[
-                  { value: "MD", label: "🇲🇩 +373" },
-                  { value: "PMR", label: "ПМР +373" },
-                  { value: "RU", label: "🇷🇺 +7" },
-                ]}
-              />
-              <input
-                type="tel"
-                inputMode="tel"
-                value={phone}
-                onChange={(event) =>
-                  setPhone(formatPhone(event.target.value, phoneCountry))
-                }
-                className="min-h-12 min-w-0 rounded-xl border border-paper-line bg-white/75 px-3 text-paper-ink outline-none transition focus:border-gold-deep focus:bg-white"
-                placeholder={phoneCountry === "RU" ? "+7 (9XX)…" : "+373 77…"}
-                autoComplete="tel"
-                required
-              />
-            </div>
-          </label>
+          <div>
+            <label htmlFor="order-phone" className={ticketLabelClass}>
+              Телефон <span className="text-[#b3341f]">*</span>
+            </label>
+            <PhoneField
+              id="order-phone"
+              className="mt-2"
+              tone="paper"
+              value={phone}
+              country={phoneCountry}
+              inputRef={phoneInputRef}
+              onValueChange={(next) => {
+                setPhone(next);
+                if (phoneError) setPhoneError(null);
+              }}
+              onCountryChange={(next) => {
+                setPhoneCountry(next);
+                setPhoneError(null);
+              }}
+              invalid={Boolean(phoneError)}
+              describedBy="order-phone-hint"
+              required
+            />
+            <p
+              id="order-phone-hint"
+              className={`mt-1.5 text-xs normal-case tracking-normal ${
+                phoneError ? "text-[#b3341f]" : "text-paper-ink/55"
+              }`}
+            >
+              {phoneError ??
+                `Код +${PHONE_COUNTRIES[phoneCountry].dialCode} — ${PHONE_COUNTRIES[phoneCountry].hint}`}
+            </p>
+          </div>
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2">

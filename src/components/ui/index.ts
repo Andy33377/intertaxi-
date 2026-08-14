@@ -8,6 +8,8 @@ export { Checkbox } from "./Checkbox";
 export type { CheckboxProps, CheckboxTone } from "./Checkbox";
 export { DatePicker } from "./DatePicker";
 export type { DatePickerProps, DatePickerTone } from "./DatePicker";
+export { PhoneField } from "./PhoneField";
+export type { PhoneFieldProps } from "./PhoneField";
 export { PriceRow } from "./PriceRow";
 export type { PriceRowProps } from "./PriceRow";
 export { Section } from "./Section";
