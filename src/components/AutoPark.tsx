@@ -30,18 +30,6 @@ type Car = {
 const cars: Car[] = [
   {
     id: 1,
-    image: "/car0.png",
-    name: "Volkswagen Golf",
-    description:
-      "Компактный и экономичный автомобиль для спокойных городских и междугородних поездок.",
-    seats: 5,
-    fuel: "Дизель",
-    childSeat: true,
-    ac: true,
-    largeLuggage: false,
-  },
-  {
-    id: 2,
     image: "/car1.png",
     name: "Volkswagen Touran",
     description:
@@ -53,7 +41,7 @@ const cars: Car[] = [
     largeLuggage: false,
   },
   {
-    id: 3,
+    id: 2,
     image: "/car2.png",
     name: "Volkswagen Transporter T4",
     description:
@@ -116,7 +104,11 @@ export default function AutoPark() {
             }}
             aria-hidden="true"
           />
-          <AnimatePresence initial={false} custom={slideDirection} mode="popLayout">
+          <AnimatePresence
+            initial={false}
+            custom={slideDirection}
+            mode="popLayout"
+          >
             <motion.div
               key={car.image}
               custom={slideDirection}
@@ -164,7 +156,10 @@ export default function AutoPark() {
           </span>
         </div>
 
-        <div className="flex flex-col justify-center p-5 sm:p-7 lg:p-9" aria-live="polite">
+        <div
+          className="flex flex-col justify-center p-5 sm:p-7 lg:p-9"
+          aria-live="polite"
+        >
           <AnimatePresence initial={false} mode="wait">
             <motion.div
               key={car.id}
