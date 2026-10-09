@@ -4,8 +4,16 @@ import "../src/styles/globals.css";
 import { DefaultSeo } from "next-seo";
 import { golos, unbounded } from "@/lib/fonts";
 import { siteConfig } from "@/lib/siteConfig";
+import { useEffect } from "react";
+import { handleContactClick } from "@/lib/gtag";
 
 export default function MyApp({ Component, pageProps }: AppProps) {
+  // Конверсии Google Ads: клики по телефону, Telegram, Viber
+  useEffect(() => {
+    document.addEventListener("click", handleContactClick);
+    return () => document.removeEventListener("click", handleContactClick);
+  }, []);
+
   return (
     <div className={`${golos.variable} ${unbounded.variable}`}>
       <DefaultSeo

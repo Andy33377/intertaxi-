@@ -25,6 +25,7 @@ import {
   toE164,
   type PhoneCountry,
 } from "@/lib/phone";
+import { CONVERSIONS, trackConversion } from "@/lib/gtag";
 
 type Trip = {
   from?: string;
@@ -128,6 +129,9 @@ export default function OrderForm() {
         price: quotedPrice ?? undefined,
         status: "submitted",
       });
+
+      // Конверсия Google Ads: заявка отправлена (transaction_id защищает от дублей)
+      trackConversion(CONVERSIONS.lead, { transaction_id: String(data.id) });
 
       window.localStorage.removeItem("tripData");
       await router.push("/thanks");
