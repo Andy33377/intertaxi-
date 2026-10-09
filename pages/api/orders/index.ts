@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma";
+import { isAdminRequest } from "@/lib/adminAuth";
 
 const RATE_LIMIT = { windowMs: 10 * 60 * 1000, max: 10 };
 const buckets = new Map<string, number[]>();
@@ -18,25 +19,28 @@ function tooMany(req: NextApiRequest) {
   return false;
 }
 
+const MAX = { name: 80, phone: 20, place: 120, comment: 500 } as const;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_RE = /^\d{2}:\d{2}$/;
+
+function str(value: unknown, max: number) {
+  if (typeof value !== "string") return null;
+  const v = value.trim();
+  if (!v || v.length > max) return null;
+  return v;
+}
+
+function optStr(value: unknown, max: number) {
+  if (value === undefined || value === null || value === "") return null;
+  return str(value, max);
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ): Promise<void> {
   if (req.method === "GET") {
-    const auth = req.headers.authorization || "";
-    const ok =
-      auth.startsWith("Basic ") &&
-      (() => {
-        try {
-          const [u, p] = Buffer.from(auth.split(" ")[1], "base64")
-            .toString()
-            .split(":");
-          return u === process.env.DRIVER_USER && p === process.env.DRIVER_PASS;
-        } catch {
-          return false;
-        }
-      })();
-    if (!ok) {
+    if (!isAdminRequest(req)) {
       res.status(401).end("Unauthorized");
       return;
     }
@@ -48,37 +52,53 @@ export default async function handler(
       res.status(200).json(orders);
       return;
     } catch (err: unknown) {
-      const error = err as { message?: string };
       console.error("❌ Ошибка при получении заказов:", err);
-      res.status(500).json({ error: error.message || "Unknown error" });
+      res.status(500).json({ error: "Internal server error" });
       return;
     }
   }
 
   if (req.method === "POST") {
     try {
-      const {
-        name,
-        phone,
-        passengers,
-        childSeat,
-        comment,
-        from,
-        to,
-        date,
-        time,
-        roundTrip,
-        returnDate,
-        returnTime,
-      } = req.body;
-
       if (tooMany(req)) {
         res.status(429).json({ error: "Too many requests, try later" });
         return;
       }
 
-      if (!name || !phone || !from || !to || !date || !time) {
-        res.status(400).json({ error: "Missing required fields" });
+      const body = (req.body ?? {}) as Record<string, unknown>;
+      const name = str(body.name, MAX.name);
+      const phone = str(body.phone, MAX.phone);
+      const from = str(body.from, MAX.place);
+      const to = str(body.to, MAX.place);
+      const date = str(body.date, 10);
+      const time = str(body.time, 5);
+      const comment = optStr(body.comment, MAX.comment);
+      const roundTrip = body.roundTrip === true;
+      const returnDate = roundTrip ? optStr(body.returnDate, 10) : null;
+      const returnTime = roundTrip ? optStr(body.returnTime, 5) : null;
+      const childSeat = body.childSeat === true;
+      const passengersNum = Number(body.passengers);
+      const passengers =
+        Number.isInteger(passengersNum) && passengersNum >= 1 && passengersNum <= 20
+          ? passengersNum
+          : 1;
+
+      if (
+        !name ||
+        !phone ||
+        !/^\+?[0-9]{6,15}$/.test(phone) ||
+        !from ||
+        !to ||
+        !date ||
+        !DATE_RE.test(date) ||
+        !time ||
+        !TIME_RE.test(time) ||
+        (returnDate !== null && !DATE_RE.test(returnDate)) ||
+        (returnTime !== null && !TIME_RE.test(returnTime)) ||
+        (typeof body.comment === "string" &&
+          body.comment.trim().length > MAX.comment)
+      ) {
+        res.status(400).json({ error: "Invalid or missing fields" });
         return;
       }
 
@@ -86,16 +106,16 @@ export default async function handler(
         data: {
           name,
           phone,
-          passengers: Number(passengers) || 1,
-          childSeat: Boolean(childSeat),
-          comment: comment || null,
+          passengers,
+          childSeat,
+          comment,
           from,
           to,
           date,
           time,
-          roundTrip: Boolean(roundTrip),
-          returnDate: returnDate || null,
-          returnTime: returnTime || null,
+          roundTrip,
+          returnDate,
+          returnTime,
         },
       });
 
@@ -115,7 +135,7 @@ export default async function handler(
             : "") +
           `Имя: ${name}\n` +
           `Телефон: ${phoneDisplay}\n` +
-          `Пассажиры: ${Number(passengers) || 1}${
+          `Пассажиры: ${passengers}${
             childSeat ? " (+дет.кресло)" : ""
           }\n` +
           (comment ? `Комментарий: ${comment}\n` : "") +
@@ -140,9 +160,8 @@ export default async function handler(
       res.status(201).json(order);
       return;
     } catch (err: unknown) {
-      const error = err as { message?: string };
       console.error("❌ Ошибка при создании заказа:", err);
-      res.status(400).json({ error: error.message || "Unknown error" });
+      res.status(500).json({ error: "Internal server error" });
       return;
     }
   }

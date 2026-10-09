@@ -10,7 +10,8 @@ export default async function handler(
     res.status(200).json({ ok: true });
     return;
   } catch (e: unknown) {
-    res.status(500).json({ ok: false, error: String(e) });
+    console.error("Health check failed:", e);
+    res.status(500).json({ ok: false });
     return;
   }
 }
