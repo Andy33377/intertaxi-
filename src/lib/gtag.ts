@@ -5,7 +5,7 @@ export const GOOGLE_ADS_ID = "AW-18476170634";
 
 export const CONVERSIONS = {
   /** Заявка с сайта (успешная отправка формы заказа) */
-  lead: `${GOOGLE_ADS_ID}/LEAD_LABEL`,
+  lead: `${GOOGLE_ADS_ID}/ZoluCNGfnZcdEIr7j-pE`,
   /** Клик по номеру телефона */
   call: `${GOOGLE_ADS_ID}/CALL_LABEL`,
   /** Клик по Telegram / Viber */
