@@ -7,7 +7,6 @@ export default function AdminHeader() {
       <nav className="flex gap-4 mr-4">
         <Link href="/admin">Dashboard</Link>
         <Link href="/admin/orders">Заказы</Link>
-        <Link href="/admin/users">Пользователи</Link>
       </nav>
     </header>
   );

@@ -1,24 +1,20 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma";
-
-function isAuthorized(req: NextApiRequest) {
-  const h = req.headers.authorization || "";
-  if (!h.startsWith("Basic ")) return false;
-
-  try {
-    const [u, p] = Buffer.from(h.split(" ")[1], "base64").toString().split(":");
-    return u === process.env.DRIVER_USER && p === process.env.DRIVER_PASS;
-  } catch {
-    return false;
-  }
-}
+import { isAdminRequest } from "@/lib/adminAuth";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ): Promise<void> {
+  // Все операции с конкретным заказом — только для админа
+  if (!isAdminRequest(req)) {
+    res.setHeader("WWW-Authenticate", 'Basic realm="Secure Area"');
+    res.status(401).end("Unauthorized");
+    return;
+  }
+
   const id = Number(req.query.id);
-  if (Number.isNaN(id)) {
+  if (!Number.isInteger(id) || id <= 0) {
     res.status(400).json({ error: "Invalid id" });
     return;
   }
@@ -34,11 +30,6 @@ export default async function handler(
   }
 
   if (req.method === "DELETE") {
-    if (!isAuthorized(req)) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
-
     try {
       await prisma.order.delete({ where: { id } });
       res.status(204).end();
@@ -50,7 +41,7 @@ export default async function handler(
         return;
       }
       console.error("❌ Ошибка при удалении заказа:", err);
-      res.status(500).json({ error: error.message || "Unknown error" });
+      res.status(500).json({ error: "Internal server error" });
       return;
     }
   }
